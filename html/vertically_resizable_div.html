@@ -1,0 +1,84 @@
+<html>
+
+  <head>
+    <style>
+     #box2 {
+       width: 300px;
+       height: 100px;
+       border-style: solid;
+       border-color: red;
+       resize: vertical;
+       overflow: auto;
+     }
+
+     #box {
+       width: 300px;
+       height: 100px;
+       min-height: 50px;
+       border-style: solid;
+       border-color: green;
+       position: relative;
+     }
+
+     #handle {
+       width: 30px;
+       height: 12px;
+       border-style: solid;
+       border-color: red;
+       border-width: 3px;
+       border-radius: 15%;
+       position: absolute;
+       bottom: -18px;
+       left: calc(50% - 15px);
+       transform: translateY(-50%);
+       cursor: grabbing;
+       z-index: 1;
+       background-color: white;
+       user-select: none;
+     }
+    </style>
+  </head>
+
+  <body>
+    Built-in resize:
+    <div id="box2">
+      
+    </div>
+    
+    <br>
+    Custom resize:
+    <div id="box">    
+      <div id="handle">
+      </div>
+    </div>
+  </body>
+  
+</html>
+
+<script>
+ document.addEventListener("DOMContentLoaded", function() {
+   var isDragging = false;
+   var startY;
+   var currentY;
+   var boxHeight;
+
+   var handle = document.querySelector("#handle");
+   handle.addEventListener("mousedown", function(event) {
+     isDragging = true;
+     startY = event.pageY;
+     boxHeight = document.querySelector("#box").offsetHeight;
+   });
+
+   document.addEventListener("mousemove", function(event) {
+     if (isDragging) {
+       currentY = event.pageY;
+       var newHeight = boxHeight + (currentY - startY);
+       document.querySelector("#box").style.height = newHeight + "px";
+     }
+   });
+
+   document.addEventListener("mouseup", function() {
+     isDragging = false;
+   });
+ });
+</script>
