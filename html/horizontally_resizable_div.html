@@ -1,0 +1,67 @@
+<html>
+
+<head>
+<style>
+  #box {
+  width: 300px;
+  height: 450px;
+  background-color: grey;
+  position: relative;
+  }
+  
+  #handle {
+  width: 12px;
+  height: 30px;
+  border-style: solid;
+  border-width: 3px;
+  border-radius: 15px;
+  position: absolute;
+  left: calc(100%);
+  top: 50%;
+  transform: translateY(-50%);
+  transform: translateX(-50%);
+  cursor: grabbing
+  }
+</style>
+</head>
+
+<body>
+  <div id="box">
+    <div id="handle">
+    </div>
+  </div>
+</body>
+
+</html>
+
+<script>
+ document.addEventListener("DOMContentLoaded", () => {
+   let isDragging = false;
+   let startX;
+   let currentX;
+   let boxWidth;
+   
+   let handle = document.querySelector('#handle');
+   handle.addEventListener("mousedown", (event) => {
+     console.log('mousedown');
+     isDragging = true;
+     startX = event.pageX;
+     boxWidth = document.querySelector("#box").offsetWidth;
+   });
+   
+   document.addEventListener("mousemove", (event) => {
+     if (isDragging) {
+       //console.log(event);
+       currentX = event.pageX;
+       let newWidth = boxWidth + (currentX - startX);
+       console.log('new width:' + newWidth);
+       document.querySelector('#box').style.width = newWidth + "px";
+     }
+   });
+   
+   document.addEventListener("mouseup", () => {
+     isDragging = - false;
+   });
+   
+ });
+</script>
