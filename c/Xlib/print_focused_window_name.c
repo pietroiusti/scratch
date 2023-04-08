@@ -1,5 +1,6 @@
 /* Print the name of the window that has focus */
 
+#include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -8,16 +9,21 @@
 
 int main(int argc, char* argv[]) {
     Display* display;
+
     XEvent an_event;
+
     char *display_name = getenv("DISPLAY");
     display = XOpenDisplay(display_name);
     if (display == NULL) {
         fprintf(stderr, "%s: cannot connect to X server '%s'\n",
                 argv[0], display_name);
     }
+
     Window root_window = DefaultRootWindow(display);
 
     Atom property = XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
+
+    XSelectInput(display, root_window, PropertyChangeMask);
 
     //return values
     Atom type_return;
@@ -26,14 +32,16 @@ int main(int argc, char* argv[]) {
     unsigned long bytes_left;
     unsigned char *data;
 
-    XSelectInput(display, root_window, FocusChangeMask);
-    
     while (1) {
         XNextEvent(display, &an_event);
 
-        printf("%d\n", an_event.type);
+        if (an_event.xproperty.atom != property) {
+            printf("not interesting\n");
+            continue;
+        }
 
-        // https://stackoverflow.com/questions/73833171/how-to-get-the-active-window-using-x11-xlib-c-api
+        printf("interesting\n");
+
         XGetWindowProperty(display,
                            root_window,
                            property,
@@ -46,34 +54,28 @@ int main(int argc, char* argv[]) {
                            &nitems_return, //should be 1 (zero if there is no such window)
                            &bytes_left,    //should be 0 (i'm not sure but should be atomic read)
                            &data           //should be non-null
-            );            
-        //printf("%s\n", *data[0]);
+            );
 
-        Window active_window = ((Window*) data)[0];
+        Window our_magic_window = *(Window *)data;
+
+        if (our_magic_window == 0)
+            continue;
 
         char* window_name;
-        if (XFetchName(display, active_window, &window_name) != 0) {
+        if (XFetchName(display, our_magic_window, &window_name) != 0) {
             printf("The active window is: %s\n", window_name);
             XFree(window_name);
         }
-
         XClassHint class_hint;
-
-        XGetClassHint(display, active_window, &class_hint);
-
+        if (XGetClassHint(display, our_magic_window, &class_hint) == 0)
+            continue;
         char * window_class = class_hint.res_class;
         char * window_foo = class_hint.res_name;
-
         printf("res.class = %s\n", window_class);
         printf("res.name = %s\n", window_foo);
-
         printf("\n\n");
-    }
 
-    // XFree(data);
-    
-    /* XFree(class_hint.res_name); */
-    /* XFree(class_hint.res_class); */
+    }
 
     XCloseDisplay(display);
     return 0;
