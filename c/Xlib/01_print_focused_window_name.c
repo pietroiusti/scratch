@@ -1,4 +1,15 @@
-/* Print the name of the window that has focus */
+/* Print the name of the current active window */
+
+/*
+  This program listens for changes of the "NET_ACTIVE_WINDOW" property
+  on the root window.
+
+  This property is (supposed to be) changed on the root window by
+  window manager.
+
+  When the property changes, the associated window is looked up. Once
+  we have the window, we can retrieve and print its names.
+*/
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -9,10 +20,9 @@
 
 int main(int argc, char* argv[]) {
     Display* display;
-
-    XEvent an_event;
-
+    XEvent event;
     char *display_name = getenv("DISPLAY");
+
     display = XOpenDisplay(display_name);
     if (display == NULL) {
         fprintf(stderr, "%s: cannot connect to X server '%s'\n",
@@ -20,12 +30,12 @@ int main(int argc, char* argv[]) {
     }
 
     Window root_window = DefaultRootWindow(display);
+    Atom active_window_atom = XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
 
-    Atom property = XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
-
+    // Listen to any property change on the root window
     XSelectInput(display, root_window, PropertyChangeMask);
 
-    //return values
+    //Return values of XGetWindowProperty
     Atom type_return;
     int format_return;
     unsigned long nitems_return;
@@ -33,9 +43,10 @@ int main(int argc, char* argv[]) {
     unsigned char *data;
 
     while (1) {
-        XNextEvent(display, &an_event);
+        XNextEvent(display, &event);
 
-        if (an_event.xproperty.atom != property) {
+        // We are only interested on the active window.
+        if (event.xproperty.atom != active_window_atom) {
             printf("not interesting\n");
             continue;
         }
@@ -44,7 +55,7 @@ int main(int argc, char* argv[]) {
 
         XGetWindowProperty(display,
                            root_window,
-                           property,
+                           active_window_atom,
                            0,
                            1,
                            False,
@@ -61,6 +72,7 @@ int main(int argc, char* argv[]) {
         if (our_magic_window == 0)
             continue;
 
+        // Get name of the window
         char* window_name;
         if (XFetchName(display, our_magic_window, &window_name) != 0) {
             printf("The active window is: %s\n", window_name);
@@ -69,12 +81,11 @@ int main(int argc, char* argv[]) {
         XClassHint class_hint;
         if (XGetClassHint(display, our_magic_window, &class_hint) == 0)
             continue;
-        char * window_class = class_hint.res_class;
-        char * window_foo = class_hint.res_name;
-        printf("res.class = %s\n", window_class);
-        printf("res.name = %s\n", window_foo);
+        char * window_application_class = class_hint.res_class;
+        char * window_application_name = class_hint.res_name;
+        printf("res.class = %s\n", window_application_class);
+        printf("res.name = %s\n", window_application_name);
         printf("\n\n");
-
     }
 
     XCloseDisplay(display);
