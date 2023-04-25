@@ -273,14 +273,19 @@ main(int argc, char **argv)
                             ctrl_1 = 1; ctrl_2 = 0; ctrl_0 = 0;
 
                             if (f_1) {
+                                printf("receiving ctrl1 (in context f1)\n");
                                 send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
                                 ctrl_temp_0 = 1;
+                                send_key_ev_and_sync(uidev, KEY_F, 0);
                                 send_key_ev_and_sync(uidev, KEY_RIGHT, 1); // send right1
                             } else if (f_2) {
+                                printf("receiving ctrl1 (in context f2)\n");
                                 send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
                                 ctrl_temp_0 = 1;
+                                send_key_ev_and_sync(uidev, KEY_F, 0);
                                 send_key_ev_and_sync(uidev, KEY_RIGHT, 1); // send right1
                             } else if (f_0) {
+                                printf("receiving ctrl1 (in context f0)\n");
                                 send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl1
                             }
 
