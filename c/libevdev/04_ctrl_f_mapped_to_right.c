@@ -1,12 +1,38 @@
-// Map C-f to Right.
+/*
+  Map Right Ctrl + F to Right.
+  compile with:
+  gcc -g `pkg-config --cflags libevdev` ./04_ctrl_f_mapped_to_right.c `pkg-config --libs libevdev` -o 04
+  
+  The template I've used is from
+  https://gitlab.freedesktop.org/libevdev/libevdev/blob/master/tools/libevdev-events.c
+  That code has the following header:
+  
+  SPDX-License-Identifier: MIT
+  Copyright © 2013 Red Hat, Inc.
 
-// The template I've used is from
-// https://gitlab.freedesktop.org/libevdev/libevdev/blob/master/tools/libevdev-events.c
-// has the following header:
-//
-/* SPDX-License-Identifier: MIT
- * Copyright © 2013 Red Hat, Inc.
- */
+  
+  The license of the code I'm adding is MIT too.
+
+
+
+
+
+  Some elaboration:
+  
+  - Keyboard event values:
+    - 1 = gone down
+    - 2 = held down
+    - 0 = gone up
+
+  - State of the keyboard ≠ State of the userspace.
+    - Example:...
+  
+  - conditionals:
+    - 1) f ≠ 0 at keyboard level    ---> rctrl must be 0 at userspace level
+         
+    - 2) rctrl ≠ 0 at keyboard level ---> f must be 0 at userspace level
+  
+*/
 
 #include <assert.h>
 #include <errno.h>
@@ -296,11 +322,13 @@ main(int argc, char **argv)
                                 if (!ctrl_0) { // might be impossible...
                                     //send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
                                     //ctrl_temp_0 = 1;
+                                    printf("the alleged impossible is happening");
                                 }
                             } else if (f_2) {
                                 if (!ctrl_0) { // might be impossible...
                                     //send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
                                     //ctrl_temp_0 = 1;
+                                    printf("the alleged impossible is happening");
                                 }
                             } else if (f_0) {
                                 send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl2
