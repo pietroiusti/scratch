@@ -178,7 +178,6 @@ main(int argc, char **argv)
     int ctrl_1 = 0;
     int ctrl_2 = 0;
     int ctrl_0 = 1;
-    int ctrl_temp_0;
 
     struct libevdev *dev = NULL;
     const char *file;
@@ -256,11 +255,9 @@ main(int argc, char **argv)
 
                         if (ctrl_1) {
                             send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                            ctrl_temp_0 = 1;
                             send_key_ev_and_sync(uidev, KEY_RIGHT, 1);
                         } else if (ctrl_2) {
                             send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                            ctrl_temp_0 = 1;
                             send_key_ev_and_sync(uidev, KEY_RIGHT, 1);
                         } else if (ctrl_0) {
                             send_key_ev_and_sync(uidev, ev.code, ev.value); // send original f1
@@ -280,13 +277,11 @@ main(int argc, char **argv)
                     } else if (ev.value == 0) { // receiving f0
                         f_0 = 1; f_1 = 0; f_2 = 0;
 
-                        if (ctrl_1) { // if (ctrl_temp_0)
+                        if (ctrl_1) {
                             send_key_ev_and_sync(uidev, KEY_RIGHT, 0); // send right0
-                            ctrl_temp_0 = 0;
                             send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 1); // restore ctrl (we might wanna save the actual old value) // when we will have more maps...
-                        } else if (ctrl_2) { // if (ctrl_temp_0)
+                        } else if (ctrl_2) {
                             send_key_ev_and_sync(uidev, KEY_RIGHT, 0); // send right0
-                            ctrl_temp_0 = 0;
                             send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 1); // restore ctrl (we might wanna save the actual old value) // when we will have more maps...
                         } else if (ctrl_0) {
                             send_key_ev_and_sync(uidev, ev.code, ev.value); // send original f0
@@ -301,13 +296,11 @@ main(int argc, char **argv)
                             if (f_1) {
                                 printf("receiving ctrl1 (in context f1)\n");
                                 send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                                ctrl_temp_0 = 1;
                                 send_key_ev_and_sync(uidev, KEY_F, 0);
                                 send_key_ev_and_sync(uidev, KEY_RIGHT, 1); // send right1
                             } else if (f_2) {
                                 printf("receiving ctrl1 (in context f2)\n");
                                 send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                                ctrl_temp_0 = 1;
                                 send_key_ev_and_sync(uidev, KEY_F, 0);
                                 send_key_ev_and_sync(uidev, KEY_RIGHT, 1); // send right1
                             } else if (f_0) {
@@ -321,13 +314,11 @@ main(int argc, char **argv)
                             if (f_1) {
                                 if (!ctrl_0) { // might be impossible...
                                     //send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                                    //ctrl_temp_0 = 1;
                                     printf("the alleged impossible is happening");
                                 }
                             } else if (f_2) {
                                 if (!ctrl_0) { // might be impossible...
                                     //send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                                    //ctrl_temp_0 = 1;
                                     printf("the alleged impossible is happening");
                                 }
                             } else if (f_0) {
