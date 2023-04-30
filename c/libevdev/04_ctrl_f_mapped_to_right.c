@@ -168,17 +168,123 @@ static void send_key_ev_and_sync(const struct libevdev_uinput *uidev, unsigned i
     printf("Sending %u %u\n", code, value);
 }
 
+/* (partial) state of the keyboard */
+int f_1 = 0;
+int f_2 = 0;
+int f_0 = 1;
+int ctrl_1 = 0;
+int ctrl_2 = 0;
+int ctrl_0 = 1;
+
+struct libevdev_uinput *uidev;
+
+void handle_key(struct input_event ev) {
+    if (ev.code == KEY_F) {
+        if (ev.value == 1) { // receiving f1
+            f_1 = 1; f_2 = 0; f_0 = 0; // set keyboard state
+
+            if (ctrl_1) {
+                send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
+                send_key_ev_and_sync(uidev, KEY_RIGHT, 1);
+            } else if (ctrl_2) {
+                send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
+                send_key_ev_and_sync(uidev, KEY_RIGHT, 1);
+            } else if (ctrl_0) {
+                send_key_ev_and_sync(uidev, ev.code, ev.value); // send original f1
+            }
+
+        } else if (ev.value == 2) { // receiving f2
+            f_2 = 1; f_1 = 0; f_0 = 0; // set keyboard state
+
+            if (ctrl_1) {
+                send_key_ev_and_sync(uidev, KEY_RIGHT, 2); // send right2
+            } else if (ctrl_2) {
+                send_key_ev_and_sync(uidev, KEY_RIGHT, 2); // send right2
+            } else if (ctrl_0) {
+                send_key_ev_and_sync(uidev, ev.code, ev.value); // send original f2
+            }
+
+        } else if (ev.value == 0) { // receiving f0
+            f_0 = 1; f_1 = 0; f_2 = 0; // set keyboard state
+
+            if (ctrl_1) {
+                send_key_ev_and_sync(uidev, KEY_RIGHT, 0); // send right0
+                send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 1); // restore ctrl (we might wanna save the actual old value) // when we will have more maps...
+            } else if (ctrl_2) {
+                send_key_ev_and_sync(uidev, KEY_RIGHT, 0); // send right0
+                send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 1); // restore ctrl (we might wanna save the actual old value) // when we will have more maps...
+            } else if (ctrl_0) {
+                send_key_ev_and_sync(uidev, ev.code, ev.value); // send original f0
+            }
+
+        }
+    } else {
+        if (ev.code == KEY_RIGHTCTRL) {
+            if (ev.value == 1) { // receiving ctrl1
+                ctrl_1 = 1; ctrl_2 = 0; ctrl_0 = 0; // set keyboard state
+
+                if (f_1) {
+                    printf("receiving ctrl1 (in context f1)\n");
+                    send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
+                    send_key_ev_and_sync(uidev, KEY_F, 0);
+                    send_key_ev_and_sync(uidev, KEY_RIGHT, 1); // send right1
+                } else if (f_2) {
+                    printf("receiving ctrl1 (in context f2)\n");
+                    send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
+                    send_key_ev_and_sync(uidev, KEY_F, 0);
+                    send_key_ev_and_sync(uidev, KEY_RIGHT, 1); // send right1
+                } else if (f_0) {
+                    printf("receiving ctrl1 (in context f0)\n");
+                    send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl1
+                }
+
+            } else if (ev.value == 2) { // receiving ctrl2  <<<================================== buggy
+                ctrl_2 = 1; ctrl_1 = 0; ctrl_0 = 0; // set keyboard state
+
+                if (f_1) {
+                    if (!ctrl_0) { // might be impossible...
+                        //send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
+                        printf("the alleged impossible is happening");
+                    }
+                } else if (f_2) {
+                    if (!ctrl_0) { // might be impossible...
+                        //send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
+                        printf("the alleged impossible is happening");
+                    }
+                } else if (f_0) {
+                    send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl2
+                }
+
+            } else if (ev.value == 0) { // receiving ctrl0
+                ctrl_0 = 1; ctrl_1 = 0; ctrl_2 = 0; // set keyboard state
+
+                if (f_1) {
+                    printf("receiving ctrl0 (in context f_1)\n");
+                    send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl0
+                    // we know that f was acting as right
+                    send_key_ev_and_sync(uidev, KEY_RIGHT, 0);
+                    send_key_ev_and_sync(uidev, KEY_F, 1); // make f acting as a f again
+                } else if (f_2) {
+                    printf("receiving ctrl0 (in context f_2)\n");
+                    send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl0
+                    // we know that f was acting as right
+                    send_key_ev_and_sync(uidev, KEY_RIGHT, 0);
+                    send_key_ev_and_sync(uidev, KEY_F, 1); // make f acting as a f again
+                } else if (f_0) {
+                    printf("receiving ctrl0 (in context f_0)\n");
+                    send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl0
+                }
+
+            }
+        } else { // receving a key other than f or ctrl
+            send_key_ev_and_sync(uidev, ev.code, ev.value); // send original key
+        }
+    }
+}
+
 int
 main(int argc, char **argv)
 {
-    int f_1 = 0;
-    int f_2 = 0;
-    int f_0 = 1;
-
-    int ctrl_1 = 0;
-    int ctrl_2 = 0;
-    int ctrl_0 = 1;
-
     struct libevdev *dev = NULL;
     const char *file;
     int fd;
@@ -187,7 +293,7 @@ main(int argc, char **argv)
     if (argc < 2)
         goto out;
 
-   usleep(200000); // let (KEY_ENTER), value 0 go through before
+    usleep(200000); // let (KEY_ENTER), value 0 go through before
                     // grabbing the device
 
     file = argv[1];
@@ -205,7 +311,7 @@ main(int argc, char **argv)
 
     int err;
     int uifd;
-    struct libevdev_uinput *uidev;
+
 
     uifd = open("/dev/uinput", O_RDWR);
     if (uifd < 0) {
@@ -246,113 +352,9 @@ main(int argc, char **argv)
             printf("::::::::::::::::::::: re-synced ::::::::::::::::::::::\n");
         } else if (rc == LIBEVDEV_READ_STATUS_SUCCESS) {
             if (ev.type == EV_KEY) {
-                //printf("#### ev.type == EV_KEY\n ####");
-
-                if (ev.code == KEY_F) {
-                    if (ev.value == 1) { // receiving f1
-
-                        f_1 = 1; f_2 = 0; f_0 = 0; // set state
-
-                        if (ctrl_1) {
-                            send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                            send_key_ev_and_sync(uidev, KEY_RIGHT, 1);
-                        } else if (ctrl_2) {
-                            send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                            send_key_ev_and_sync(uidev, KEY_RIGHT, 1);
-                        } else if (ctrl_0) {
-                            send_key_ev_and_sync(uidev, ev.code, ev.value); // send original f1
-                        }
-
-                    } else if (ev.value == 2) { // receiving f2
-                        f_2 = 1; f_1 = 0; f_0 = 0; // set state
-
-                        if (ctrl_1) {
-                            send_key_ev_and_sync(uidev, KEY_RIGHT, 2); // send right2
-                        } else if (ctrl_2) {
-                            send_key_ev_and_sync(uidev, KEY_RIGHT, 2); // send right2
-                        } else if (ctrl_0) {
-                            send_key_ev_and_sync(uidev, ev.code, ev.value); // send original f2
-                        }
-
-                    } else if (ev.value == 0) { // receiving f0
-                        f_0 = 1; f_1 = 0; f_2 = 0;
-
-                        if (ctrl_1) {
-                            send_key_ev_and_sync(uidev, KEY_RIGHT, 0); // send right0
-                            send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 1); // restore ctrl (we might wanna save the actual old value) // when we will have more maps...
-                        } else if (ctrl_2) {
-                            send_key_ev_and_sync(uidev, KEY_RIGHT, 0); // send right0
-                            send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 1); // restore ctrl (we might wanna save the actual old value) // when we will have more maps...
-                        } else if (ctrl_0) {
-                            send_key_ev_and_sync(uidev, ev.code, ev.value); // send original f0
-                        }
-
-                    }
-                } else {
-                    if (ev.code == KEY_RIGHTCTRL) {
-                        if (ev.value == 1) { // receiving ctrl1
-                            ctrl_1 = 1; ctrl_2 = 0; ctrl_0 = 0;
-
-                            if (f_1) {
-                                printf("receiving ctrl1 (in context f1)\n");
-                                send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                                send_key_ev_and_sync(uidev, KEY_F, 0);
-                                send_key_ev_and_sync(uidev, KEY_RIGHT, 1); // send right1
-                            } else if (f_2) {
-                                printf("receiving ctrl1 (in context f2)\n");
-                                send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                                send_key_ev_and_sync(uidev, KEY_F, 0);
-                                send_key_ev_and_sync(uidev, KEY_RIGHT, 1); // send right1
-                            } else if (f_0) {
-                                printf("receiving ctrl1 (in context f0)\n");
-                                send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl1
-                            }
-
-                        } else if (ev.value == 2) { // receiving ctrl2  <<<================================== buggy
-                            ctrl_2 = 1; ctrl_1 = 0; ctrl_0 = 0;
-
-                            if (f_1) {
-                                if (!ctrl_0) { // might be impossible...
-                                    //send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                                    printf("the alleged impossible is happening");
-                                }
-                            } else if (f_2) {
-                                if (!ctrl_0) { // might be impossible...
-                                    //send_key_ev_and_sync(uidev, KEY_RIGHTCTRL, 0); // fake ctrl0
-                                    printf("the alleged impossible is happening");
-                                }
-                            } else if (f_0) {
-                                send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl2
-                            }
-
-                        } else if (ev.value == 0) { // receiving ctrl0
-                            ctrl_0 = 1; ctrl_1 = 0; ctrl_2 = 0;
-
-                            if (f_1) {
-                                printf("receiving ctrl0 (in context f_1)\n");
-                                send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl0
-                                // we know that f was acting as right
-                                send_key_ev_and_sync(uidev, KEY_RIGHT, 0);
-                                send_key_ev_and_sync(uidev, KEY_F, 1); // make f acting as a f again
-                            } else if (f_2) {
-                                printf("receiving ctrl0 (in context f_2)\n");
-                                send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl0
-                                // we know that f was acting as right
-                                send_key_ev_and_sync(uidev, KEY_RIGHT, 0);
-                                send_key_ev_and_sync(uidev, KEY_F, 1); // make f acting as a f again
-                            } else if (f_0) {
-                                printf("receiving ctrl0 (in context f_0)\n");
-                                send_key_ev_and_sync(uidev, ev.code, ev.value); // send original ctrl0
-                            }
-
-                        }
-                    } else { // receving a key other than f or ctrl
-                        send_key_ev_and_sync(uidev, ev.code, ev.value); // send original key
-                    }
-                }
+                handle_key(ev);
             } else {
-                //printf("#### ev.type != EV_KEY\n ####");
-                //print_event(&ev);
+                ;
             }
         }
     } while (rc == LIBEVDEV_READ_STATUS_SYNC || rc == LIBEVDEV_READ_STATUS_SUCCESS || rc == -EAGAIN);
