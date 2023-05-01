@@ -1,16 +1,16 @@
 /*
   Map Right Ctrl + F to Right.
   compile with:
-  gcc -g `pkg-config --cflags libevdev` ./04_ctrl_f_mapped_to_right.c `pkg-config --libs libevdev` -o 04
-  
+  gcc -g `pkg-config --cflags libevdev` ./03_ctrl_f_mapped_to_right.c `pkg-config --libs libevdev` -o 03
+
   The template I've used is from
   https://gitlab.freedesktop.org/libevdev/libevdev/blob/master/tools/libevdev-events.c
   That code has the following header:
-  
+
   SPDX-License-Identifier: MIT
   Copyright © 2013 Red Hat, Inc.
 
-  
+
   The license of the code I'm adding is MIT too.
 
 
@@ -18,7 +18,7 @@
 
 
   Some elaboration:
-  
+
   - Keyboard event values:
     - 1 = gone down
     - 2 = held down
@@ -26,12 +26,30 @@
 
   - State of the keyboard ≠ State of the userspace.
     - Example:...
-  
-  - conditionals:
+
+  - Conditionals:
     - 1) f ≠ 0 at keyboard level    ---> rctrl must be 0 at userspace level
-         
+
+      (if f ≠ 0 at kb level, then it either ``sends'' f, or sends
+      right --- when rctrl is down.
+
+      If it sends f, then rctrl must be currently 0 at userspace
+      level, otherwise we would be sending right. If it sends right,
+      then rctrl must be currently 0 at userspace level, because we
+      want to send right, not rctrl+right.)
+
+
     - 2) rctrl ≠ 0 at keyboard level ---> f must be 0 at userspace level
-  
+
+      (rctrl can either send rctrl or nothing.
+
+      If it sends rctrl, then f must be currently 0 at userspace
+      level, otherwise we would not be send right, which is what we
+      are supposed to send when f and rctrl are both down at keyboard
+      level. If it sends nothing (while being down at kb level), then
+      f must be currently 0 at userspace level, because otherwise
+      rctrl should send rctrl.)
+
 */
 
 #include <assert.h>
