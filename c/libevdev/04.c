@@ -173,8 +173,8 @@ typedef struct {
 
 keyboard_key_state keyboard[] = {
     { KEY_RIGHTCTRL, 0 },
-    { KEY_F, 1 },
-    { KEY_B, 1 },
+    { KEY_F, 0 },
+    { KEY_B, 0 },
 };
 
 void set_keyboard_state(struct input_event ev) {
