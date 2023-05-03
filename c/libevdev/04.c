@@ -213,73 +213,73 @@ map* is_mapped_mod(struct input_event ev) {
 void handle_key(struct input_event ev) {
     set_keyboard_state(ev);
 
-    map* mapped_key = is_mapped_key(ev);
-    map* mapped_mod = is_mapped_mod(ev);
+    map* map_of_key = is_mapped_key(ev);
+    map* map_of_mod = is_mapped_mod(ev);
 
-    if (mapped_key) {
+    if (map_of_key) {
         if (ev.value == 1) {
-            if (kb_state_of(mapped_key->mod_from) == 1) {
+            if (kb_state_of(map_of_key->mod_from) == 1) {
                 // Not considering when a key is mapped more than once
                 // and
                 // not considering cases with mod_to.
-                send_key_ev_and_sync(uidev, mapped_key->mod_from, 0);
-                send_key_ev_and_sync(uidev, mapped_key->key_to, 1);
-            } else if (kb_state_of(mapped_key->mod_from) == 2) {
-                send_key_ev_and_sync(uidev, mapped_key->mod_from, 0);
-                send_key_ev_and_sync(uidev, mapped_key->key_to, 1);
-            } else if (kb_state_of(mapped_key->mod_from) == 0) {
+                send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
+                send_key_ev_and_sync(uidev, map_of_key->key_to, 1);
+            } else if (kb_state_of(map_of_key->mod_from) == 2) {
+                send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
+                send_key_ev_and_sync(uidev, map_of_key->key_to, 1);
+            } else if (kb_state_of(map_of_key->mod_from) == 0) {
                 send_key_ev_and_sync(uidev, ev.code, ev.value);
             }
         } else if (ev.value == 2) {
-            if (kb_state_of(mapped_key->mod_from) == 1) {
-                send_key_ev_and_sync(uidev, mapped_key->key_to, 2);
-            } else if (kb_state_of(mapped_key->mod_from) == 2) {
-                send_key_ev_and_sync(uidev, mapped_key->key_to, 2);
-            } else if (kb_state_of(mapped_key->mod_from) == 0) {
+            if (kb_state_of(map_of_key->mod_from) == 1) {
+                send_key_ev_and_sync(uidev, map_of_key->key_to, 2);
+            } else if (kb_state_of(map_of_key->mod_from) == 2) {
+                send_key_ev_and_sync(uidev, map_of_key->key_to, 2);
+            } else if (kb_state_of(map_of_key->mod_from) == 0) {
                 send_key_ev_and_sync(uidev, ev.code, ev.value);
             }
         } else if (ev.value == 0) {
-            if (kb_state_of(mapped_key->mod_from) == 1) {
-                send_key_ev_and_sync(uidev, mapped_key->key_to, 0);
-                send_key_ev_and_sync(uidev, mapped_key->mod_from, 1);
-            } else if (kb_state_of(mapped_key->mod_from) == 2) {
-                send_key_ev_and_sync(uidev, mapped_key->key_to, 0);
-                send_key_ev_and_sync(uidev, mapped_key->mod_from, 1);
-            } else if (kb_state_of(mapped_key->mod_from) == 0) {
+            if (kb_state_of(map_of_key->mod_from) == 1) {
+                send_key_ev_and_sync(uidev, map_of_key->key_to, 0);
+                send_key_ev_and_sync(uidev, map_of_key->mod_from, 1);
+            } else if (kb_state_of(map_of_key->mod_from) == 2) {
+                send_key_ev_and_sync(uidev, map_of_key->key_to, 0);
+                send_key_ev_and_sync(uidev, map_of_key->mod_from, 1);
+            } else if (kb_state_of(map_of_key->mod_from) == 0) {
                 send_key_ev_and_sync(uidev, ev.code, ev.value);
             }
         }
-    } else if (mapped_mod) {
+    } else if (map_of_mod) {
         if (ev.value == 1) {
-            if (kb_state_of(mapped_mod->key_from) == 1)  {
-                send_key_ev_and_sync(uidev, mapped_mod->mod_from, 0);
-                send_key_ev_and_sync(uidev, mapped_mod->key_from, 0);
-                send_key_ev_and_sync(uidev, mapped_mod->key_to, 1);
-            } else if (kb_state_of(mapped_mod->key_from) == 2) {
-                send_key_ev_and_sync(uidev, mapped_mod->mod_from, 0);
-                send_key_ev_and_sync(uidev, mapped_mod->key_from, 0);
-                send_key_ev_and_sync(uidev, mapped_mod->key_to, 1);
-            } else if (kb_state_of(mapped_mod->key_from) == 0) {
+            if (kb_state_of(map_of_mod->key_from) == 1)  {
+                send_key_ev_and_sync(uidev, map_of_mod->mod_from, 0);
+                send_key_ev_and_sync(uidev, map_of_mod->key_from, 0);
+                send_key_ev_and_sync(uidev, map_of_mod->key_to, 1);
+            } else if (kb_state_of(map_of_mod->key_from) == 2) {
+                send_key_ev_and_sync(uidev, map_of_mod->mod_from, 0);
+                send_key_ev_and_sync(uidev, map_of_mod->key_from, 0);
+                send_key_ev_and_sync(uidev, map_of_mod->key_to, 1);
+            } else if (kb_state_of(map_of_mod->key_from) == 0) {
                 send_key_ev_and_sync(uidev, ev.code, ev.value);
             }
         } else if (ev.value == 2) {
-            if (kb_state_of(mapped_mod->key_from) == 1)  {
+            if (kb_state_of(map_of_mod->key_from) == 1)  {
                 printf("the alleged impossible is happening");
-            } else if (kb_state_of(mapped_mod->key_from) == 2) {
+            } else if (kb_state_of(map_of_mod->key_from) == 2) {
                 printf("the alleged impossible is happening");
-            } else if (kb_state_of(mapped_mod->key_from) == 0) {
+            } else if (kb_state_of(map_of_mod->key_from) == 0) {
                 send_key_ev_and_sync(uidev, ev.code, ev.value);
             }
         } else if (ev.value == 0) {
-            if (kb_state_of(mapped_mod->key_from) == 1)  {
+            if (kb_state_of(map_of_mod->key_from) == 1)  {
                 send_key_ev_and_sync(uidev, ev.code, ev.value);
-                send_key_ev_and_sync(uidev, mapped_mod->key_to, 0);
-                send_key_ev_and_sync(uidev, mapped_mod->key_from, 1);
-            } else if (kb_state_of(mapped_mod->key_from) == 2) {
+                send_key_ev_and_sync(uidev, map_of_mod->key_to, 0);
+                send_key_ev_and_sync(uidev, map_of_mod->key_from, 1);
+            } else if (kb_state_of(map_of_mod->key_from) == 2) {
                 send_key_ev_and_sync(uidev, ev.code, ev.value);
-                send_key_ev_and_sync(uidev, mapped_mod->key_to, 0);
-                send_key_ev_and_sync(uidev, mapped_mod->key_from, 1);
-            } else if (kb_state_of(mapped_mod->key_from) == 0) {
+                send_key_ev_and_sync(uidev, map_of_mod->key_to, 0);
+                send_key_ev_and_sync(uidev, map_of_mod->key_from, 1);
+            } else if (kb_state_of(map_of_mod->key_from) == 0) {
                 send_key_ev_and_sync(uidev, ev.code, ev.value);                
             }
         }        
