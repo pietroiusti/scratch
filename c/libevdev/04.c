@@ -194,6 +194,9 @@ int kb_state_of(unsigned int k_code) {
 
 struct libevdev_uinput *uidev;
 
+// Return map with key_from == ev.code, if any
+//
+// (This wrongly assumes that the value of key_from is unique.)
 map* is_mapped_key(struct input_event ev) {
     for (int i = 0; i < sizeof(maps)/sizeof(map); i++) {
         if (maps[i].key_from == ev.code)
@@ -202,6 +205,9 @@ map* is_mapped_key(struct input_event ev) {
     return 0;
 }
 
+// Return map with mod_from == ev.code, if any
+//
+// (This wrongly assumes that the value of mod_from is unique.)
 map* is_mapped_mod(struct input_event ev) {
     for (int i = 0; i < sizeof(maps)/sizeof(map); i++) {
         if (maps[i].mod_from == ev.code)
@@ -210,11 +216,32 @@ map* is_mapped_mod(struct input_event ev) {
     return 0;
 }
 
+map* get_active_map_of_mod(struct input_event ev) {
+    int number_of_active_maps = 0;
+    int index = 0;
+
+    for (int i = 0; i < sizeof(maps)/sizeof(map); i++) {
+        if (maps[i].mod_from == ev.code) {
+            if (kb_state_of(maps[i].key_from) != 0) {
+                number_of_active_maps++;
+                index = i;
+            }
+        }
+    }
+
+    if (number_of_active_maps == 1)
+        return &maps[index];
+    else
+        return 0;
+}
+
+
 void handle_key(struct input_event ev) {
     set_keyboard_state(ev);
 
     map* map_of_key = is_mapped_key(ev);
-    map* map_of_mod = is_mapped_mod(ev);
+    //map* map_of_mod = is_mapped_mod(ev);
+    map* map_of_mod = get_active_map_of_mod(ev);
 
     if (map_of_key) {
         if (ev.value == 1) {
