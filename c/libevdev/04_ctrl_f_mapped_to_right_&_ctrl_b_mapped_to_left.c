@@ -1,6 +1,6 @@
 /*
 
-  Map Right Ctrl + F to Right and Ctrl + b to Left. (buggy)
+  Map Right Ctrl + F to Right and Ctrl + b to Left.
   compile with:
   gcc -g `pkg-config --cflags libevdev` ./04.c `pkg-config --libs libevdev` -o 04
 
