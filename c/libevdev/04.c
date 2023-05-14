@@ -205,6 +205,24 @@ map* is_mapped_key(struct input_event ev) {
     return 0;
 }
 
+map *get_active_map_of_key(struct input_event ev) {
+    int number_of_active_maps = 0;
+    int index = 0;
+
+    for (int i = 0; i < sizeof(maps)/sizeof(map); i++) {
+        if (maps[i].key_from == ev.code) {
+            if (kb_state_of(maps[i].mod_from) != 0) {
+                number_of_active_maps++;
+                index = i;
+            }
+        }
+    }
+    if (number_of_active_maps == 1)
+        return &maps[index];
+    else
+        return 0;
+}
+
 // Return map with mod_from == ev.code, if any
 //
 // (This wrongly assumes that the value of mod_from is unique.)
@@ -235,11 +253,11 @@ map* get_active_map_of_mod(struct input_event ev) {
         return 0;
 }
 
-
 void handle_key(struct input_event ev) {
     set_keyboard_state(ev);
 
-    map* map_of_key = is_mapped_key(ev);
+    //map* map_of_key = is_mapped_key(ev);
+    map* map_of_key = get_active_map_of_key(ev);
     //map* map_of_mod = is_mapped_mod(ev);
     map* map_of_mod = get_active_map_of_mod(ev);
 
@@ -307,9 +325,9 @@ void handle_key(struct input_event ev) {
                 send_key_ev_and_sync(uidev, map_of_mod->key_to, 0);
                 send_key_ev_and_sync(uidev, map_of_mod->key_from, 1);
             } else if (kb_state_of(map_of_mod->key_from) == 0) {
-                send_key_ev_and_sync(uidev, ev.code, ev.value);                
+                send_key_ev_and_sync(uidev, ev.code, ev.value);
             }
-        }        
+        }
     } else {
         send_key_ev_and_sync(uidev, ev.code, ev.value);
     }
