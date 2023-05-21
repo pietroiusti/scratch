@@ -1,6 +1,10 @@
 /*
 
-  Map multiple keys.
+  Map multiple combos to a single key:
+  - ctrl+f -> right
+  - ctrl+b -> left
+  - ctrl+p -> up
+  - ctrl+n -> down
 
   Compile with:
   gcc -g `pkg-config --cflags libevdev` ./05.c `pkg-config --libs libevdev` -o 05
@@ -246,9 +250,7 @@ void handle_key(struct input_event ev) {
     if (map_of_key) {
         if (ev.value == 1) {
             if (kb_state_of(map_of_key->mod_from) == 1) {
-                // Not considering when a key is mapped more than once
-                // and
-                // not considering cases with mod_to.
+                // Not considering cases with mod_to.
                 send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
                 send_key_ev_and_sync(uidev, map_of_key->key_to, 1);
             } else if (kb_state_of(map_of_key->mod_from) == 2) {
