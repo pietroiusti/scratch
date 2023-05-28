@@ -1,14 +1,20 @@
 /*
 
-  Map multiple combos to a single key or combo: (To be checked)
+  Map multiple combos to a single key or combo:
 
   - (l/r)ctrl+f -> right
   - (l/r)ctrl+b -> left
   - (l/r)ctrl+p -> up
   - (l/r)ctrl+n -> down
 
-  - alt+f  -> ctrl+right
+  - (l/r)ctrl+e -> end
+  - (l/r)ctrl+a -> home
 
+  - (l/r)ctl-v -> pagedown
+  - (l/r)alt-v -> pageup
+
+  - (l/r)alt+f -> ctrl+right
+  - (l/r)alt-b -> ctrol+left
 
   Compile with:
   gcc -g `pkg-config --cflags libevdev` ./06.c `pkg-config --libs libevdev` -o 06
@@ -171,19 +177,41 @@ map maps[] = {
   // ________|_________  _____|________
   // |mod           key| | mod   key  |
 
+  // C-f, C-b, C-p, C-n
   { KEY_RIGHTCTRL, KEY_F, 0, KEY_RIGHT }, { KEY_LEFTCTRL, KEY_F, 0, KEY_RIGHT },
   { KEY_RIGHTCTRL, KEY_B, 0, KEY_LEFT }, { KEY_LEFTCTRL, KEY_B, 0, KEY_LEFT },
   { KEY_RIGHTCTRL, KEY_P, 0, KEY_UP }, { KEY_LEFTCTRL, KEY_P, 0, KEY_UP },
   { KEY_RIGHTCTRL, KEY_N, 0, KEY_DOWN }, { KEY_LEFTCTRL, KEY_N, 0, KEY_DOWN },
-    
-  { KEY_LEFTALT, KEY_F, KEY_LEFTCTRL, KEY_RIGHT },
+
+  // C-a, C-e
+  { KEY_RIGHTCTRL, KEY_A, 0, KEY_HOME }, { KEY_LEFTCTRL, KEY_A, 0, KEY_HOME },
+  { KEY_RIGHTCTRL, KEY_E, 0, KEY_END }, { KEY_LEFTCTRL, KEY_E, 0, KEY_END },
+
+  // M-f, M-b
+  { KEY_RIGHTALT, KEY_F, KEY_RIGHTCTRL, KEY_RIGHT }, { KEY_LEFTALT, KEY_F, KEY_LEFTCTRL, KEY_RIGHT },
+  { KEY_RIGHTALT, KEY_B, KEY_RIGHTCTRL, KEY_LEFT }, { KEY_LEFTALT, KEY_B, KEY_LEFTCTRL, KEY_LEFT },
+
+  // M-v, C-v
+  { KEY_RIGHTALT, KEY_V, 0, KEY_PAGEUP }, { KEY_LEFTALT, KEY_V, 0, KEY_PAGEUP },
+  { KEY_RIGHTCTRL, KEY_V, 0, KEY_PAGEDOWN }, { KEY_LEFTCTRL, KEY_V, 0, KEY_PAGEDOWN },
+  // TODO:
+  // C-w
+  // M-w
+  // C-y
+  // C-d
+  // M-d
+  // C-k
+  // C-space
+  // C-s
+  // C-r
+  // C-g
+  // Escaping map [I usually bind it to C-q]
 };
 
 // Take index of a map in maps and send mod_to + key_to of that map
 static void send_output(const struct libevdev_uinput *uidev, int i) {
   if (maps[i].mod_to)
     send_key_ev_and_sync(uidev, maps[i].mod_to, 1);
-  
 }
 
 typedef struct {
@@ -195,10 +223,14 @@ keyboard_key_state keyboard[] = {
   { KEY_LEFTCTRL, 0 }, // 29
   { KEY_RIGHTCTRL, 0 }, // 97
   { KEY_LEFTALT, 0 }, // 56
+  { KEY_RIGHTALT, 0 },
   { KEY_P, 0 }, // 25
   { KEY_F, 0 }, // 33
   { KEY_B, 0 }, // 48
   { KEY_N, 0 }, // 49
+  { KEY_V, 0 },
+  { KEY_A, 0 },
+  { KEY_E, 0 },
 };
 // KEY_RIGHT     106
 // KEY_LEFT      105
@@ -279,10 +311,10 @@ void handle_key(struct input_event ev) {
       printf("we are in ev.value == 1 block\n");
       if (kb_state_of(map_of_key->mod_from) == 1) {
 	send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
-	
+
         // # = IN PROGRESS: considering cases with mod_to.
 	if (map_of_key->mod_to)	  send_key_ev_and_sync(uidev, map_of_key->mod_to, 1);
-	
+
         send_key_ev_and_sync(uidev, map_of_key->key_to, 1);
       } else if (kb_state_of(map_of_key->mod_from) == 2) {
         send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
