@@ -33,15 +33,20 @@
   - (l/r)alt-b -> ctrol+left
 
   Compile with:
-  gcc -g `pkg-config --cflags libevdev` ./01.c `pkg-config --libs libevdev` -o 01
+  gcc ./01.c `pkg-config --cflags libevdev` `pkg-config --libs libevdev x11` -pthread -o 01
 
  */
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/input-event-codes.h>
 #include <linux/input.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -303,8 +308,72 @@ void handle_key(struct input_event ev) {
   }
 }
 
+void *track_window() {
+  Display* display;
+  XEvent xevent;
+  char *display_name = getenv("DISPLAY");
+  display = XOpenDisplay(display_name);
+  if (display == NULL) {
+    printf("display null\n");
+    exit(1);
+  }
+  Window root_window = DefaultRootWindow(display);
+  Atom active_window_atom = XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
+  XSelectInput(display, root_window, PropertyChangeMask);
+  // return values
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_left;
+  unsigned char *data;
+
+  while (1) {
+    XNextEvent(display, &xevent);
+
+    if (xevent.xproperty.atom != active_window_atom)
+      continue;
+
+    XGetWindowProperty(display,
+                       root_window,
+                       active_window_atom,
+                       0,
+                       1,
+                       False,
+                       XA_WINDOW,
+                       &type_return,   //should be XA_WINDOW
+                       &format_return, //should be 32
+                       &nitems_return, //should be 1 (zero if there is no such window)
+                       &bytes_left,    //should be 0 (i'm not sure but should be atomic read)
+                       &data           //should be non-null
+		       );
+
+    Window focused_window = *(Window *)data;
+
+    if (focused_window == 0)
+      continue;
+
+    char* window_name1;
+    if (XFetchName(display, focused_window, &window_name1) != 0) {
+      printf("The active window is: %s\n", window_name1);
+      XFree(window_name1);
+    }
+    XClassHint class_hint;
+    if (XGetClassHint(display, focused_window, &class_hint) == 0)
+      continue;
+    char *window_class = class_hint.res_class;
+    char *window_name2 = class_hint.res_name;
+    printf("res.class = %s\n", window_class);
+    printf("res.name = %s\n", window_name2);
+    printf("\n\n");
+  }
+}
+
 int main(int argc, char **argv)
 {
+  pthread_t xthread;
+  int thread_return_value;
+  thread_return_value = pthread_create(&xthread, NULL, track_window, NULL);
+
   struct libevdev *dev = NULL;
   const char *file;
   int fd;
