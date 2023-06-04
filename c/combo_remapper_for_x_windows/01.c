@@ -81,6 +81,13 @@ typedef struct {
   unsigned int key_to;
 } map;
 
+char* mapped_windows[] = {
+  "brave-browser",
+};
+
+// -1 if not mapped, otherwise index of mapped window
+int currently_focused_window;
+
 map maps[] = {
   //        from -----------> to
   //         ^                ^
@@ -206,6 +213,12 @@ void handle_key(struct input_event ev) {
   set_keyboard_state(ev);
 
   printf("handling %d, %d\n", ev.code, ev.value);
+
+  if (currently_focused_window == -1) {
+    printf("we should not use combo maps\n");
+    send_key_ev_and_sync(uidev, ev.code, ev.value);
+    return;
+  }
 
   map* map_of_key = get_active_map_of_key(ev);
   if (map_of_key)
@@ -365,6 +378,13 @@ void *track_window() {
     printf("res.class = %s\n", window_class);
     printf("res.name = %s\n", window_name2);
     printf("\n\n");
+
+    currently_focused_window = -1;
+    for (int i = 0; i < sizeof(mapped_windows)/sizeof(char*); i++) {
+      printf("comparing: [%s] with [%s]\n", mapped_windows[i], window_name2);
+      if (strcmp(mapped_windows[i], window_name2) == 0)
+	currently_focused_window = i;
+    }
   }
 }
 
