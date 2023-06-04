@@ -434,7 +434,6 @@ main(int argc, char **argv)
     goto out;
 
   usleep(200000); // let (KEY_ENTER), value 0 go through before
-  // grabbing the device
 
   file = argv[1];
   fd = open(file, O_RDONLY);
