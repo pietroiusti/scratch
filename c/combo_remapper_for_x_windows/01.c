@@ -1,4 +1,14 @@
 /**
+   x windows key combinations remapper.
+
+   Giulio Pietroiusti. 2023.
+
+   This program remaps certain key combinations to either other key
+   combination (e.g., alt+f -> ctrl-right) or to a single key (e.g.,
+   ctrl+f -> right), only if the currently focused X window matches one
+   of the strings in the mapped_windows array.
+
+
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -14,9 +24,8 @@
 */
 
 /*
-  In progress...
 
-  For now: Map multiple combos to a single key or combo:
+  Remappings:
 
   - (l/r)ctrl+f -> right
   - (l/r)ctrl+b -> left
