@@ -95,7 +95,7 @@ char* mapped_windows[] = {
 };
 
 // -1 if not mapped, otherwise index of mapped window
-int currently_focused_window;
+volatile int currently_focused_window;
 
 map maps[] = {
   //        from -----------> to
