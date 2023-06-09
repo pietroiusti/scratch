@@ -223,7 +223,9 @@ void handle_key(struct input_event ev) {
 
   printf("handling %d, %d\n", ev.code, ev.value);
 
-  if (currently_focused_window == -1) {
+  int currently_focused_window_copy = currently_focused_window;
+
+  if (currently_focused_window_copy == -1) {
     printf("we should not use combo maps\n");
     send_key_ev_and_sync(uidev, ev.code, ev.value);
     return;
@@ -388,12 +390,13 @@ void *track_window() {
     printf("res.name = %s\n", window_name2);
     printf("\n\n");
 
-    currently_focused_window = -1;
+    int currently_focused_window_next_value = -1;
     for (int i = 0; i < sizeof(mapped_windows)/sizeof(char*); i++) {
       printf("comparing: [%s] with [%s]\n", mapped_windows[i], window_name2);
       if (strcmp(mapped_windows[i], window_name2) == 0)
-	currently_focused_window = i;
+	currently_focused_window_next_value = i;
     }
+    currently_focused_window = currently_focused_window_next_value;
   }
 }
 
