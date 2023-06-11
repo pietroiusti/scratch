@@ -1,9 +1,5 @@
 /*
-  Map single keys like janus-key
-
-  AND
-
-  map multiple combos to a single key or combo:
+  Map single keys like janus-key AND map multiple combos to a single key or combo:
 
   - (l/r)ctrl+f -> right
   - (l/r)ctrl+b -> left
@@ -37,7 +33,16 @@
 #include <unistd.h>
 #include "libevdev/libevdev-uinput.h"
 #include "libevdev/libevdev.h"
+#include <time.h>
 
+int last_input_was_special_combination = 0; // janus combo
+
+// store delay value given by user into timespec struct
+struct timespec tp_max_delay;
+
+// For calculating delay
+struct timespec now;
+struct timespec tp_sum;
 
 // Modified key: key to which a primary and/or a secondary function
 // has been assigned. (Those keys to which a secondary function has
@@ -107,6 +112,45 @@ map maps[] = {
   // Escaping map [I usually bind it to C-q]
 };
 
+// If any of the janus keys is down or held return the index of the
+// first one of them in the mod_map. Otherwise, return -1.
+static int some_jk_are_down_or_held() {
+    size_t length = sizeof(mod_map)/sizeof(mod_map[0]);
+    for (int i = 0; i < length; i++) {
+        if (mod_map[i].state == 1 || mod_map[i].state == 2 && mod_map[i].secondary_function > 0)
+            return i;
+    }
+    return -1;
+}
+
+// Compare two timespec structs.
+// Return -1 if *tp1 < *tp2, 0 if *tp1 == *tp2, 1 if *tp1 < *tp2
+static int timespec_cmp(struct timespec *tp1, struct timespec *tp2) {
+    if (tp1->tv_sec > tp2->tv_sec) {
+        return -1;
+    }
+    else if (tp1->tv_sec < tp2->tv_sec) {
+        return 1;
+    } else { // tp1->tv_sec == tp2->tv_sec
+        if (tp1->tv_nsec > tp2->tv_nsec)
+            return -1;
+        else if (tp1->tv_nsec < tp2->tv_nsec)
+            return 1;
+        else
+            return 0;
+    }
+}
+
+// Add two timespec structs.
+static void timespec_add(struct timespec* a, struct timespec* b, struct timespec* c) {
+    c->tv_sec = a->tv_sec + b->tv_sec;
+    c->tv_nsec = a->tv_nsec + b->tv_nsec;
+    if (c->tv_nsec >= 1000000000) { // overflow
+        c->tv_nsec -= 1000000000;
+        c->tv_sec++;
+    }
+}
+
 static void send_key_ev_and_sync(const struct libevdev_uinput *uidev, unsigned int code, int value)
 {
   int err;
@@ -123,6 +167,39 @@ static void send_key_ev_and_sync(const struct libevdev_uinput *uidev, unsigned i
   }
 
   printf("Sending %u %u\n", code, value);
+}
+
+// For each janus key down or held send an EV_KEY event with its
+// secondary function code and value `value`.
+static void send_down_or_held_jks_secondary_function(const struct libevdev_uinput *uidev, int value) {
+    for (int j = 0; j < sizeof(mod_map)/sizeof(mod_map[0]); j++) {
+        if (mod_map[j].state == 1 || mod_map[j].state == 2 && mod_map[j].secondary_function > 0)  {
+            send_key_ev_and_sync(uidev, mod_map[j].secondary_function, value);
+        }
+    }
+}
+
+// If `key` is in the mod_map, then return its index. Otherwise return
+// -1.
+static int is_in_mod_map(unsigned int key) {
+    size_t length = sizeof(mod_map)/sizeof(mod_map[0]);
+    for (int i = 0; i < length; i++) {
+        if (mod_map[i].key == key)
+            return i;
+    }
+    return -1;
+};
+
+// Post through uidev, with value `value, the primary function
+// associated of `code`.
+static void send_primary_function(const struct libevdev_uinput *uidev, unsigned int code, int value) {
+  int i = is_in_mod_map(code);
+  if (i >= 0) {
+    unsigned int primary_function = mod_map[i].primary_function > 0 ? mod_map[i].primary_function : mod_map[i].key;
+    send_key_ev_and_sync(uidev, primary_function, value);
+  } else {
+    send_key_ev_and_sync(uidev, code, value);
+  }
 }
 
 // Take index of a map in maps and send mod_to + key_to of that map
@@ -209,18 +286,6 @@ map* get_active_map_of_mod(struct input_event ev) {
     return 0;
 }
 
-
-// If `key` is in the mod_map, then return its index. Otherwise return
-// -1.
-static int is_in_mod_map(unsigned int key) {
-    size_t length = sizeof(mod_map)/sizeof(mod_map[0]);
-    for (int i = 0; i < length; i++) {
-        if (mod_map[i].key == key)
-            return i;
-    }
-    return -1;
-};
-
 // If `key` is a janus key, then return its index. Otherwise return
 // -1.
 static int is_janus(unsigned int key) {
@@ -232,139 +297,7 @@ static int is_janus(unsigned int key) {
 }
 
 void handle_key_merge(struct input_event ev) {
-  set_keyboard_state(ev);
-
-  printf("handling %d, %d\n", ev.code, ev.value);
-
-  map* map_of_key = get_active_map_of_key(ev);
-  if (map_of_key)
-    printf("map_of_key is truthy\n");
-
-  map* map_of_mod = get_active_map_of_mod(ev);
-  if (map_of_mod)
-    printf("map_of_mod is truthy\n");
-
-  if (is_janus(ev.code)) {
-    
-  } else {
-
-  }
-
-  if (map_of_key) {
-    printf("we are in map_of_key block\n");
-    if (ev.value == 1) {
-      printf("we are in ev.value == 1 block\n");
-      if (kb_state_of(map_of_key->mod_from) == 1) {
-	send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
-
-        // # = IN PROGRESS: considering cases with mod_to.
-	if (map_of_key->mod_to)	  send_key_ev_and_sync(uidev, map_of_key->mod_to, 1);
-
-        send_key_ev_and_sync(uidev, map_of_key->key_to, 1);
-      } else if (kb_state_of(map_of_key->mod_from) == 2) {
-        send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
-
-        // # = IN PROGRESS: considering cases with mod_to.
-	if (map_of_key->mod_to) {
-	    send_key_ev_and_sync(uidev, map_of_key->mod_to, 1);
-	}
-
-        send_key_ev_and_sync(uidev, map_of_key->key_to, 1);
-      } else if (kb_state_of(map_of_key->mod_from) == 0) {
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
-      }
-    } else if (ev.value == 2) {
-      if (kb_state_of(map_of_key->mod_from) == 1) {
-        send_key_ev_and_sync(uidev, map_of_key->key_to, 2);
-      } else if (kb_state_of(map_of_key->mod_from) == 2) {
-        send_key_ev_and_sync(uidev, map_of_key->key_to, 2);
-      } else if (kb_state_of(map_of_key->mod_from) == 0) {
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
-      }
-    } else if (ev.value == 0) {
-      if (kb_state_of(map_of_key->mod_from) == 1) {
-        send_key_ev_and_sync(uidev, map_of_key->key_to, 0);
-
-        // # = IN PROGRESS: considering cases with mod_to.
-	if (map_of_key->mod_to)
-	  send_key_ev_and_sync(uidev, map_of_key->mod_to, 0);
-
-        send_key_ev_and_sync(uidev, map_of_key->mod_from, 1);
-      } else if (kb_state_of(map_of_key->mod_from) == 2) {
-        send_key_ev_and_sync(uidev, map_of_key->key_to, 0);
-
-        // # = IN PROGRESS: considering cases with mod_to.
-	if (map_of_key->mod_to)
-	  send_key_ev_and_sync(uidev, map_of_key->mod_to, 0);
-
-        send_key_ev_and_sync(uidev, map_of_key->mod_from, 1);
-      } else if (kb_state_of(map_of_key->mod_from) == 0) {
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
-      }
-    }
-  } else if (map_of_mod) {
-    printf("we are in map_of_mod block\n");
-    if (ev.value == 1) {
-      printf("we are in ev.value == 1  block\n");
-      if (kb_state_of(map_of_mod->key_from) == 1)  {
-	printf("we are in kb_state_of(map_of_mod->key_from) == 1\n");
-        send_key_ev_and_sync(uidev, map_of_mod->mod_from, 0);
-        send_key_ev_and_sync(uidev, map_of_mod->key_from, 0);
-
-	// # = IN PROGRESS: considering cases with mod_to.
-	if (map_of_mod->mod_to)
-	  send_key_ev_and_sync(uidev, map_of_mod->mod_to, 1);
-
-        send_key_ev_and_sync(uidev, map_of_mod->key_to, 1);
-      } else if (kb_state_of(map_of_mod->key_from) == 2) {
-        printf("we are in kb_state_of(map_of_mod->key_from) == 2\n");
-	send_key_ev_and_sync(uidev, map_of_mod->mod_from, 0);
-        send_key_ev_and_sync(uidev, map_of_mod->key_from, 0);
-
-	// # = IN PROGRESS: considering cases with mod_to.
-	if (map_of_mod->mod_to)
-	  send_key_ev_and_sync(uidev, map_of_mod->mod_to, 1);
-
-        send_key_ev_and_sync(uidev, map_of_mod->key_to, 1);
-      } else if (kb_state_of(map_of_mod->key_from) == 0) {
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
-      }
-    } else if (ev.value == 2) {
-      printf("we are in ev.value == 2  block\n");
-      if (kb_state_of(map_of_mod->key_from) == 1)  {
-        printf("the alleged impossible is happening");
-      } else if (kb_state_of(map_of_mod->key_from) == 2) {
-        printf("the alleged impossible is happening");
-      } else if (kb_state_of(map_of_mod->key_from) == 0) {
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
-      }
-    } else if (ev.value == 0) {
-      printf("we are in ev.value == 0  block\n");
-      if (kb_state_of(map_of_mod->key_from) == 1)  {
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
-
-	// # = IN PROGRESS: considering cases with mod_to.
-	if (map_of_mod->mod_to)
-	  send_key_ev_and_sync(uidev, map_of_mod->mod_to, 0);
-
-        send_key_ev_and_sync(uidev, map_of_mod->key_to, 0);
-        send_key_ev_and_sync(uidev, map_of_mod->key_from, 1);
-      } else if (kb_state_of(map_of_mod->key_from) == 2) {
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
-
-	// # = IN PROGRESS: considering cases with mod_to.
-	if (map_of_mod->mod_to)
-	  send_key_ev_and_sync(uidev, map_of_mod->mod_to, 0);
-
-        send_key_ev_and_sync(uidev, map_of_mod->key_to, 0);
-        send_key_ev_and_sync(uidev, map_of_mod->key_from, 1);
-      } else if (kb_state_of(map_of_mod->key_from) == 0) {
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
-      }
-    }
-  } else {
-    send_key_ev_and_sync(uidev, ev.code, ev.value);
-  }
+  //todo
 }
 
 void handle_key(struct input_event ev) {
