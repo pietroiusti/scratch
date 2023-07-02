@@ -309,15 +309,8 @@ void handle_key(struct input_event ev) {
     printf("we are in map_of_key block\n");
     if (ev.value == 1) {
       printf("we are in ev.value == 1 block\n");
-      if (kb_state_of(map_of_key->mod_from) == 1) {
+      if (kb_state_of(map_of_key->mod_from) != 0) {
 	send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
-
-	if (map_of_key->mod_to)
-          send_key_ev_and_sync(uidev, map_of_key->mod_to, 1);
-
-        send_key_ev_and_sync(uidev, map_of_key->key_to, 1);
-      } else if (kb_state_of(map_of_key->mod_from) == 2) {
-        send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
 
 	if (map_of_key->mod_to)
           send_key_ev_and_sync(uidev, map_of_key->mod_to, 1);
@@ -325,20 +318,11 @@ void handle_key(struct input_event ev) {
         send_key_ev_and_sync(uidev, map_of_key->key_to, 1);
       }
     } else if (ev.value == 2) {
-      if (kb_state_of(map_of_key->mod_from) == 1) {
-        send_key_ev_and_sync(uidev, map_of_key->key_to, 2);
-      } else if (kb_state_of(map_of_key->mod_from) == 2) {
+      if (kb_state_of(map_of_key->mod_from) != 0) {
         send_key_ev_and_sync(uidev, map_of_key->key_to, 2);
       }
     } else if (ev.value == 0) {
-      if (kb_state_of(map_of_key->mod_from) == 1) {
-        send_key_ev_and_sync(uidev, map_of_key->key_to, 0);
-
-	if (map_of_key->mod_to)
-	  send_key_ev_and_sync(uidev, map_of_key->mod_to, 0);
-
-        send_key_ev_and_sync(uidev, map_of_key->mod_from, 1);
-      } else if (kb_state_of(map_of_key->mod_from) == 2) {
+      if (kb_state_of(map_of_key->mod_from) != 0) {
         send_key_ev_and_sync(uidev, map_of_key->key_to, 0);
 
 	if (map_of_key->mod_to)
@@ -351,18 +335,9 @@ void handle_key(struct input_event ev) {
     printf("we are in map_of_mod block\n");
     if (ev.value == 1) {
       printf("we are in ev.value == 1  block\n");
-      if (kb_state_of(map_of_mod->key_from) == 1)  {
+      if (kb_state_of(map_of_mod->key_from) != 0)  {
 	printf("we are in kb_state_of(map_of_mod->key_from) == 1\n");
         send_key_ev_and_sync(uidev, map_of_mod->mod_from, 0);
-        send_key_ev_and_sync(uidev, map_of_mod->key_from, 0);
-
-	if (map_of_mod->mod_to)
-	  send_key_ev_and_sync(uidev, map_of_mod->mod_to, 1);
-
-        send_key_ev_and_sync(uidev, map_of_mod->key_to, 1);
-      } else if (kb_state_of(map_of_mod->key_from) == 2) {
-        printf("we are in kb_state_of(map_of_mod->key_from) == 2\n");
-	send_key_ev_and_sync(uidev, map_of_mod->mod_from, 0);
         send_key_ev_and_sync(uidev, map_of_mod->key_from, 0);
 
 	if (map_of_mod->mod_to)
@@ -372,22 +347,12 @@ void handle_key(struct input_event ev) {
       }
     } else if (ev.value == 2) {
       printf("we are in ev.value == 2  block\n");
-      if (kb_state_of(map_of_mod->key_from) == 1)  {
-        printf("the alleged impossible is happening");
-      } else if (kb_state_of(map_of_mod->key_from) == 2) {
+      if (kb_state_of(map_of_mod->key_from) != 0)  {
         printf("the alleged impossible is happening");
       }
     } else if (ev.value == 0) {
       printf("we are in ev.value == 0  block\n");
-      if (kb_state_of(map_of_mod->key_from) == 1)  {
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
-
-	if (map_of_mod->mod_to)
-	  send_key_ev_and_sync(uidev, map_of_mod->mod_to, 0);
-
-        send_key_ev_and_sync(uidev, map_of_mod->key_to, 0);
-        send_key_ev_and_sync(uidev, map_of_mod->key_from, 1);
-      } else if (kb_state_of(map_of_mod->key_from) == 2) {
+      if (kb_state_of(map_of_mod->key_from) != 0)  {
         send_key_ev_and_sync(uidev, ev.code, ev.value);
 
 	if (map_of_mod->mod_to)
