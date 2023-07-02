@@ -323,22 +323,12 @@ void handle_key(struct input_event ev) {
           send_key_ev_and_sync(uidev, map_of_key->mod_to, 1);
 
         send_key_ev_and_sync(uidev, map_of_key->key_to, 1);
-      } else if (kb_state_of(map_of_key->mod_from) == 0) {
-        // TODO: remove this condition?
-        // We cannot be here because get_active_map_of_key returns
-        // non-zero only when the state of mod-from is non-zero.
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
       }
     } else if (ev.value == 2) {
       if (kb_state_of(map_of_key->mod_from) == 1) {
         send_key_ev_and_sync(uidev, map_of_key->key_to, 2);
       } else if (kb_state_of(map_of_key->mod_from) == 2) {
         send_key_ev_and_sync(uidev, map_of_key->key_to, 2);
-      } else if (kb_state_of(map_of_key->mod_from) == 0) {
-        // TODO: remove this condition?
-        // We cannot be here because get_active_map_of_key returns
-        // non-zero only when the state of mod-from is non-zero.
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
       }
     } else if (ev.value == 0) {
       if (kb_state_of(map_of_key->mod_from) == 1) {
@@ -355,11 +345,6 @@ void handle_key(struct input_event ev) {
 	  send_key_ev_and_sync(uidev, map_of_key->mod_to, 0);
 
         send_key_ev_and_sync(uidev, map_of_key->mod_from, 1);
-      } else if (kb_state_of(map_of_key->mod_from) == 0) {
-        // TODO: remove this condition?
-        // We cannot be here because get_active_map_of_key returns
-        // non-zero only when the state of mod-from is non-zero.
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
       }
     }
   } else if (map_of_mod) {
@@ -384,11 +369,6 @@ void handle_key(struct input_event ev) {
 	  send_key_ev_and_sync(uidev, map_of_mod->mod_to, 1);
 
         send_key_ev_and_sync(uidev, map_of_mod->key_to, 1);
-      } else if (kb_state_of(map_of_mod->key_from) == 0) {
-        // TODO: remove this condition?
-        // We cannot be here because get_active_map_of_mod returns
-        // non-zero only when the state of key-from is non-zero.
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
       }
     } else if (ev.value == 2) {
       printf("we are in ev.value == 2  block\n");
@@ -396,11 +376,6 @@ void handle_key(struct input_event ev) {
         printf("the alleged impossible is happening");
       } else if (kb_state_of(map_of_mod->key_from) == 2) {
         printf("the alleged impossible is happening");
-      } else if (kb_state_of(map_of_mod->key_from) == 0) {
-        // TODO: remove this condition?
-        // We cannot be here because get_active_map_of_mod returns
-        // non-zero only when the state of key-from is non-zero.
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
       }
     } else if (ev.value == 0) {
       printf("we are in ev.value == 0  block\n");
@@ -420,11 +395,6 @@ void handle_key(struct input_event ev) {
 
         send_key_ev_and_sync(uidev, map_of_mod->key_to, 0);
         send_key_ev_and_sync(uidev, map_of_mod->key_from, 1);
-      } else if (kb_state_of(map_of_mod->key_from) == 0) {
-        // TODO: remove this condition?
-        // We cannot be here because get_active_map_of_mod returns
-        // non-zero only when the state of key-from is non-zero.
-        send_key_ev_and_sync(uidev, ev.code, ev.value);
       }
     }
   } else {
