@@ -164,6 +164,12 @@ static void send_key_ev_and_sync(const struct libevdev_uinput *uidev, unsigned i
   printf("Sending %u %u\n", code, value);
 }
 
+// Represents what a key combination should be mapped to.
+//
+//        from -------------------------> to
+//         ^                            ^
+// ________|_________              _____|________
+// |mod           key|             | mod   key  |
 typedef struct {
   unsigned int mod_from;
   unsigned int key_from;
@@ -172,11 +178,6 @@ typedef struct {
 } map;
 
 map maps[] = {
-  //        from -----------> to
-  //         ^                ^
-  // ________|_________  _____|________
-  // |mod           key| | mod   key  |
-
   // C-f, C-b, C-p, C-n
   { KEY_RIGHTCTRL, KEY_F, 0, KEY_RIGHT }, { KEY_LEFTCTRL, KEY_F, 0, KEY_RIGHT },
   { KEY_RIGHTCTRL, KEY_B, 0, KEY_LEFT }, { KEY_LEFTCTRL, KEY_B, 0, KEY_LEFT },
@@ -219,6 +220,7 @@ typedef struct {
   int value;
 } keyboard_key_state;
 
+// Hold state of (relevant part of) the keyboard
 keyboard_key_state keyboard[] = {
   { KEY_LEFTCTRL, 0 }, // 29
   { KEY_RIGHTCTRL, 0 }, // 97
@@ -235,6 +237,7 @@ keyboard_key_state keyboard[] = {
 // KEY_RIGHT     106
 // KEY_LEFT      105
 
+// Get input_event and update relevant key in keyboard state.
 void set_keyboard_state(struct input_event ev) {
   for (int i = 0; i < sizeof(keyboard)/sizeof(keyboard_key_state); i++) {
     if (keyboard[i].code == ev.code)
@@ -252,7 +255,9 @@ int kb_state_of(unsigned int k_code) {
 
 struct libevdev_uinput *uidev;
 
-// return active map of key if any, otherwise 0.
+// Return active map of key if any, otherwise 0.
+//
+// A map is active when both mod_from and mod_key are not zero.
 map *get_active_map_of_key(struct input_event ev) {
   int number_of_active_maps = 0;
   int index = 0;
@@ -272,7 +277,9 @@ map *get_active_map_of_key(struct input_event ev) {
     return 0;
 }
 
-// return active map of mod if any, otherwise 0.
+// Return active map of mod if any, otherwise 0.
+//
+// A map is active when both mod_from and mod_key are not zero.
 map* get_active_map_of_mod(struct input_event ev) {
   int number_of_active_maps = 0;
   int index = 0;
@@ -297,15 +304,13 @@ void handle_key(struct input_event ev) {
 
   printf("handling %d, %d\n", ev.code, ev.value);
 
+  // Either map_of_key or map_of_mod will be truthy
   map* map_of_key = get_active_map_of_key(ev);
-  if (map_of_key)
-    printf("map_of_key is truthy\n");
-
+  if (map_of_key) printf("map_of_key is truthy\n");
   map* map_of_mod = get_active_map_of_mod(ev);
-  if (map_of_mod)
-    printf("map_of_mod is truthy\n");
+  if (map_of_mod) printf("map_of_mod is truthy\n");
 
-  if (map_of_key) {
+  if (map_of_key) { // ## NON-MOD KEY PRESS PRESENT IN A MAP
     printf("we are in map_of_key block\n");
     if (ev.value == 1) {
       printf("we are in ev.value == 1 block\n");
@@ -331,7 +336,7 @@ void handle_key(struct input_event ev) {
         send_key_ev_and_sync(uidev, map_of_key->mod_from, 1);
       }
     }
-  } else if (map_of_mod) {
+  } else if (map_of_mod) { // ## MOD KEY PRESS PRESENT IN A MAP
     printf("we are in map_of_mod block\n");
     if (ev.value == 1) {
       printf("we are in ev.value == 1  block\n");
@@ -362,7 +367,8 @@ void handle_key(struct input_event ev) {
         send_key_ev_and_sync(uidev, map_of_mod->key_from, 1);
       }
     }
-  } else {
+  } else {  // ## MOD/NON-MOD KEY PRESS
+    printf("We are in non-map else block\n");
     send_key_ev_and_sync(uidev, ev.code, ev.value);
   }
 }
