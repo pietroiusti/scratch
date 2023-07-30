@@ -107,9 +107,16 @@ typedef struct {
 
 mod_key mod_map[] = {
     // key                1st function     2nd function
-    {  KEY_CAPSLOCK,      KEY_ESC,         KEY_LEFTALT     }, // Change both CAPS' primary and secondary function
-    {  KEY_ENTER,         0,               KEY_RIGHTALT    }, // Do not change ENTER's primary function
-    {  KEY_ESC,           KEY_CAPSLOCK  }  // Only change ESC's primary function
+    {  KEY_CAPSLOCK,      KEY_ESC,         KEY_LEFTALT     },
+    {  KEY_ENTER,         0,               KEY_RIGHTALT    },
+    {  KEY_RIGHTALT,      KEY_RIGHTCTRL },
+    {  KEY_LEFTALT,       KEY_LEFTCTRL  },
+    {  KEY_RIGHTCTRL,     KEY_RIGHTALT  },
+    {  KEY_LEFTCTRL,      KEY_LEFTMETA  },
+    {  KEY_LEFTMETA,      KEY_LEFTALT   },
+    {  KEY_RIGHTMETA,     KEY_RIGHTALT  },
+    {  KEY_COMPOSE,       KEY_RIGHTMETA },
+    {  KEY_ESC,           KEY_CAPSLOCK  }
 };
 
 // Delay in milliseconds. 
