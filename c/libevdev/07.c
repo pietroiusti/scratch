@@ -89,6 +89,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 #include "libevdev/libevdev-uinput.h"
 #include "libevdev/libevdev.h"
@@ -213,6 +214,38 @@ keyboard_key_state keyboard[] = {
 };
 // KEY_RIGHT     106
 // KEY_LEFT      105
+
+
+// ## Physical keyboard keys state (new version) Now we also store the
+// last time down (which gets registered on ev.value 1).
+typedef struct {
+  unsigned int code;
+  int value;
+  struct timespec last_time_down;
+} keyboard_key_state2;
+keyboard_key_state2 keyboard2[] = {
+  { KEY_LEFTCTRL, 0 }, // 29
+  { KEY_RIGHTCTRL, 0 }, // 97
+  { KEY_LEFTALT, 0 }, // 56
+  { KEY_RIGHTALT, 0 },
+  { KEY_P, 0 }, // 25
+  { KEY_F, 0 }, // 33
+  { KEY_B, 0 }, // 48
+  { KEY_N, 0 }, // 49
+  { KEY_V, 0 },
+  { KEY_A, 0 },
+  { KEY_E, 0 },
+};
+
+void set_keyboard_state2(struct input_event ev) {
+  for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
+    if (keyboard2[i].code == ev.code) {
+      keyboard2[i].value = ev.value;
+      if (ev.value == 1)
+        clock_gettime(CLOCK_MONOTONIC, &keyboard2[i].last_time_down);
+    }
+  }
+}
 
 void set_keyboard_state(struct input_event ev) {
   for (int i = 0; i < sizeof(keyboard)/sizeof(keyboard_key_state); i++) {
@@ -427,6 +460,12 @@ void handle_key_merge(struct input_event ev) {
   } else {
     send_key_ev_and_sync(uidev, ev.code, ev.value);
   }
+}
+
+void handle_key2(struct input_event ev) {
+  set_keyboard_state2(ev);
+
+  // todo...
 }
 
 void handle_key(struct input_event ev) {
