@@ -42,13 +42,14 @@
    _______           ______________     _________   
   |       |         |              |   |         |
 
-  0, CAPS     ---->   0, ESC,               ALT
-  0, ENTER    ---->   0, 0 (ENTER),         CTRL
-  CTRL, ESC   ---->   0, RIGHT,             0
+  0, CAPS     ---->   0, ESC,               LALT
+  0, ENTER    ---->   0, 0 (ENTER),         RCTRL
+  RCTRL, ESC  ---->   0, RIGHT,             0
   0, ESC      ---->   0, CAPS,              0
-  CTRL, F     ---->   0, RIGHT,             0
-  CTRL, 0     ---->   ALT, 0,               0
-  META, 0     ---->   ALT, 0,               0
+  RALT, F     ---->   RCTRL, RIGHT,         0
+  RCTRL, F    ---->   0, RIGHT,             0
+  RCTRL, 0    ---->   RALT, 0,              0
+  RMETA, 0    ---->  RALT, 0,               0
 
   According to the above, the keys appears in single maps (sm) and
   combination maps (cm) as follows:
@@ -66,15 +67,15 @@
   |-------------+----------------+-----------|
 
   |-------+----------------+-----------|
-  | KEY   | Single Key Map | Combo Map |
+  | MOD   | Single Key Map | Combo Map |
   |-------+----------------+-----------|
   | SHIFT | n              | n         |
   |-------+----------------+-----------|
-  | META  | y              | n         |
+  | RMETA | y              | n         |
   |-------+----------------+-----------|
-  | ALT   | n              | y         |
+  | RALT  | n              | y         |
   |-------+----------------+-----------|
-  | CTRL  | y              | y         |
+  | RCTRL | y              | y         |
   |-------+----------------+-----------|
 
  */
@@ -125,6 +126,25 @@ unsigned int max_delay = 300; // If a key is held down for a time
 			      // greater than max_delay, then, when
 			      // released, it will not send its
 			      // primary function
+
+typedef struct {
+  unsigned int mod_from;
+  unsigned int key_from;
+  unsigned int mod_to;
+  unsigned int key_to;
+  unsigned int on_hold; // on hold
+} map2;
+
+map2 maps2[] = {
+  { 0, KEY_CAPSLOCK,          0, KEY_ESC,                KEY_LEFTALT   },
+  { 0, KEY_ENTER,             0, 0,                      KEY_RIGHTCTRL },
+  { KEY_RIGHTCTRL, KEY_ESC,   0, KEY_RIGHT,              0             },
+  { 0, KEY_ESC,               0, KEY_CAPSLOCK,           0             },
+  { KEY_RIGHTALT, KEY_F,      KEY_RIGHTCTRL, KEY_RIGHT,  0             },
+  { KEY_RIGHTCTRL, 0,         KEY_RIGHTALT, 0,           0             },
+  { KEY_RIGHTCTRL, KEY_F,     0, KEY_RIGHT,              0             },
+  { KEY_RIGHTMETA, 0,         KEY_RIGHTALT, 0,           0             },
+};
 
 typedef struct {
   unsigned int mod_from;
@@ -216,12 +236,14 @@ keyboard_key_state keyboard[] = {
 // KEY_LEFT      105
 
 
-// ## Physical keyboard keys state (new version) Now we also store the
-// last time down (which gets registered on ev.value 1).
+// ## Represents the current state keyboard's keys state (new
+// version).  A key can be in either 1, or 2, or 0 state (value). Now
+// we also store the last time down (which gets registered on ev.value
+// 1).
 typedef struct {
-  unsigned int code;
-  int value;
-  struct timespec last_time_down;
+  unsigned int code; // Code of the key
+  int value;         // Status of key (either 1, or 2, or 0)
+  struct timespec last_time_down; // Last time value was set to 1
 } keyboard_key_state2;
 keyboard_key_state2 keyboard2[] = {
   { KEY_LEFTCTRL, 0 }, // 29
@@ -463,9 +485,12 @@ void handle_key_merge(struct input_event ev) {
 }
 
 void handle_key2(struct input_event ev) {
+  printf("handling %d, %d\n", ev.code, ev.value);
+
+  // Update keyboard state
   set_keyboard_state2(ev);
 
-  // todo...
+  
 }
 
 void handle_key(struct input_event ev) {
@@ -654,7 +679,7 @@ main(int argc, char **argv)
       printf("Re-synced\n");
     } else if (rc == LIBEVDEV_READ_STATUS_SUCCESS) {
       if (ev.type == EV_KEY)
-        handle_key(ev);
+        handle_key2(ev);
     }
   } while (rc == LIBEVDEV_READ_STATUS_SYNC || rc == LIBEVDEV_READ_STATUS_SUCCESS || rc == -EAGAIN);
 
