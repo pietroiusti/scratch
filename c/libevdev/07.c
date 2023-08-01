@@ -136,14 +136,14 @@ typedef struct {
 } map2;
 
 map2 maps2[] = {
-  { 0, KEY_CAPSLOCK,          0, KEY_ESC,                KEY_LEFTALT   },
-  { 0, KEY_ENTER,             0, 0,                      KEY_RIGHTCTRL },
-  { KEY_RIGHTCTRL, KEY_ESC,   0, KEY_RIGHT,              0             },
-  { 0, KEY_ESC,               0, KEY_CAPSLOCK,           0             },
-  { KEY_RIGHTALT, KEY_F,      KEY_RIGHTCTRL, KEY_RIGHT,  0             },
-  { KEY_RIGHTCTRL, 0,         KEY_RIGHTALT, 0,           0             },
-  { KEY_RIGHTCTRL, KEY_F,     0, KEY_RIGHT,              0             },
-  { KEY_RIGHTMETA, 0,         KEY_RIGHTALT, 0,           0             },
+  { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,      KEY_LEFTALT   },
+  { 0,             KEY_ENTER,    0,             0,            KEY_RIGHTCTRL },
+  { KEY_RIGHTCTRL, KEY_ESC,      0,             KEY_RIGHT,    0             },
+  { 0,             KEY_ESC,      0,             KEY_CAPSLOCK, 0             },
+  { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,    0             },
+  { KEY_RIGHTCTRL, 0,            KEY_RIGHTALT,  0,            0             },
+  { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,    0             },
+  { KEY_RIGHTMETA, 0,            KEY_RIGHTALT,  0,            0             },
 };
 
 typedef struct {
@@ -258,6 +258,17 @@ keyboard_key_state2 keyboard2[] = {
   { KEY_A, 0 },
   { KEY_E, 0 },
 };
+
+void print_keyboard2() {
+  for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); ++i) {
+    printf("########################################\n");
+    printf("Key code: %u\n", keyboard2[i].code);
+    printf("Key value: %d\n", keyboard2[i].value);
+    printf("Last time down: %lld.%09ld seconds\n", (long long)keyboard2[i].last_time_down.tv_sec, keyboard2[i].last_time_down.tv_nsec);
+    printf("########################################\n");
+    printf("\n");
+  }
+}
 
 void set_keyboard_state2(struct input_event ev) {
   for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
@@ -485,12 +496,12 @@ void handle_key_merge(struct input_event ev) {
 }
 
 void handle_key2(struct input_event ev) {
-  printf("handling %d, %d\n", ev.code, ev.value);
+  printf("((((( handling %d, %d )))))\n\n", ev.code, ev.value);
 
   // Update keyboard state
   set_keyboard_state2(ev);
 
-  
+  print_keyboard2();
 }
 
 void handle_key(struct input_event ev) {
