@@ -54,29 +54,31 @@
   According to the above, the keys appears in single maps (sm) and
   combination maps (cm) as follows:
 
-  |-------------+----------------+-----------|
-  | KEY         | Single Key Map | Combo Map |
-  |-------------+----------------+-----------|
-  | E           | n              | n         |
-  |-------------+----------------+-----------|
-  | CAPS, ENTER | y              | n         |
-  |-------------+----------------+-----------|
-  | F           | n              | y         |
-  |-------------+----------------+-----------|
-  | ESC         | y              | y         |
-  |-------------+----------------+-----------|
+  |-------+----------------+-----------+-----------|
+  | KEY   | Single Key Map | Combo Map | Janus Key |
+  |-------+----------------+-----------+-----------|
+  | E     | n              | n         | n         |
+  |-------+----------------+-----------+-----------|
+  | CAPS  | y              | n         | y         |
+  |-------+----------------+-----------+-----------|
+  | ENTER | y              | n         | y         |
+  |-------+----------------+-----------+-----------|
+  | F     | n              | y         | n         |
+  |-------+----------------+-----------+-----------|
+  | ESC   | y              | y         | n         |
+  |-------+----------------+-----------+-----------|
 
-  |-------+----------------+-----------|
-  | MOD   | Single Key Map | Combo Map |
-  |-------+----------------+-----------|
-  | SHIFT | n              | n         |
-  |-------+----------------+-----------|
-  | RMETA | y              | n         |
-  |-------+----------------+-----------|
-  | RALT  | n              | y         |
-  |-------+----------------+-----------|
-  | RCTRL | y              | y         |
-  |-------+----------------+-----------|
+  |-------+----------------+-----------+-----------|
+  | MOD   | Single Key Map | Combo Map | Janus key |
+  |-------+----------------+-----------+-----------|
+  | SHIFT | n              | n         | n         |
+  |-------+----------------+-----------+-----------|
+  | RMETA | y              | n         | n         |
+  |-------+----------------+-----------+-----------|
+  | RALT  | n              | y         | n         |
+  |-------+----------------+-----------+-----------|
+  | RCTRL | y              | y         | n         |
+  |-------+----------------+-----------+-----------|
 
  */
 
@@ -495,13 +497,37 @@ void handle_key_merge(struct input_event ev) {
   }
 }
 
+// If `key` is in the map2, then return index of map. Otherwise return
+// -1.
+static int is_key_in_single_map(unsigned int key) {
+  size_t length = sizeof(maps2)/sizeof(maps2[0]);
+
+  for (size_t i = 0; i< length; i++)
+    if (maps2[i].key_from == key && maps2[i].mod_from == 0)
+      return i;
+
+  return -1;
+}
+
+// If `key` is a janus key, then return its index in maps2. Otherwise
+// return -1.
+static int is_janus2(unsigned int key) {
+  // TODO
+}
+
 void handle_key2(struct input_event ev) {
   printf("((((( handling %d, %d )))))\n\n", ev.code, ev.value);
 
   // Update keyboard state
   set_keyboard_state2(ev);
 
-  print_keyboard2();
+  //print_keyboard2();
+
+
+  if (is_key_in_single_map(ev.code) != -1) {
+    printf("Is key in single key map\n");
+  }
+
 }
 
 void handle_key(struct input_event ev) {
