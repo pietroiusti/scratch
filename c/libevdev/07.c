@@ -553,26 +553,29 @@ void handle_key2(struct input_event ev) {
 
   //print_keyboard2();
 
-  int i = is_key_in_single_map(ev.code);
-  if (i != -1) {
+  int k_sm_i = is_key_in_single_map(ev.code);
+  int second_f = 0;
+  if (k_sm_i && maps2[k_sm_i].on_hold) second_f = k_sm_i;
+  int m_sm_i = is_mod_in_single_map(ev.code);
+  int k_cm_i = is_key_in_combo_map(ev.code);
+  int im_cm_i = is_mod_in_combo_map(ev.code);
+
+  if (k_sm_i != -1) {
     printf("Is key in single key map.\n");
-
-    if (maps2[i].on_hold) {
-      printf("Is key with secondary function.\n");
-    }
+  }
+  if (maps2[k_sm_i].on_hold) {
+    printf("Is janus key.\n");
+  }
+  if (m_sm_i != -1) {
+    printf("Is mod in single key map.\n");
+  }
+  if (k_cm_i != -1) {
+    printf("Is key in combo key map.\n");
+  }
+  if (im_cm_i != -1) {
+    printf("Is mod in combo key map.\n");
   }
 
-  if (is_mod_in_single_map(ev.code) != -1) {
-    printf("Is mod in single key map\n");
-  }
-
-  if (is_key_in_combo_map(ev.code) != -1) {
-    printf("Is key in combo key map\n");
-  }
-
-  if (is_mod_in_combo_map(ev.code) != -1) {
-    printf("Is mod in combo key map\n");
-  }
 }
 
 void handle_key(struct input_event ev) {
