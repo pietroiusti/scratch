@@ -4,7 +4,7 @@
   have already developed elsewhere separately:
 
   - 1 Map single keys like janus-key does (e.g.,
-    
+
     CAPS -> ESC on tap, ALT on HOLD
     ESC -> CAPS on tap
     ENTER -> CTRL on hold )
@@ -12,18 +12,18 @@
   AND
 
   - 2 Map multiple combos to a single key or combo. (e.g,
-  
+
     - (l/r)ctrl+f -> right
     - (l/r)ctrl+b -> left
     - (l/r)ctrl+p -> up
     - (l/r)ctrl+n -> down
-    
+
     - (l/r)ctrl+e -> end
     - (l/r)ctrl+a -> home
-    
+
     - (l/r)ctl-v -> pagedown
     - (l/r)alt-v -> pageup
-    
+
     - (l/r)alt+f -> ctrl+right
     - (l/r)alt-b -> ctrol+left .)
 
@@ -39,7 +39,7 @@
 
     input     ---->    on tap           on hold
       |                  |                 |
-   _______           ______________     _________   
+   _______           ______________     _________
   |       |         |              |   |         |
 
   0, CAPS     ---->   0, ESC,               LALT
@@ -123,7 +123,7 @@ mod_key mod_map[] = {
     {  KEY_ESC,           KEY_CAPSLOCK  }
 };
 
-// Delay in milliseconds. 
+// Delay in milliseconds.
 unsigned int max_delay = 300; // If a key is held down for a time
 			      // greater than max_delay, then, when
 			      // released, it will not send its
@@ -375,7 +375,7 @@ void handle_key_merge(struct input_event ev) {
     printf("map_of_mod is truthy\n");
 
   if (is_janus(ev.code)) {
-    
+
   } else {
 
   }
@@ -511,20 +511,38 @@ static int is_key_in_single_map(unsigned int key) {
 
 // If `mod` is in a single key/mod map in maps2, then return index of
 // map. Otherwise return -1.
-static int is_mod_in_single_map(unsigned int key) {
+static int is_mod_in_single_map(unsigned int mod) {
   size_t length = sizeof(maps2)/sizeof(maps2[0]);
 
   for (size_t i = 0; i< length; i++)
-    if (key == maps2[i].mod_from && maps2[i].key_from == 0)
+    if (mod == maps2[i].mod_from && maps2[i].key_from == 0)
       return i;
 
   return -1;
 }
 
-// If `key` is a janus key, then return its index in maps2. Otherwise
-// return -1.
-static int is_janus2(unsigned int key) {
-  // TODO
+// If `key` is in a combo map in maps2, then return index of
+// map. Otherwise return -1.
+static int is_key_in_combo_map(unsigned int key) {
+  size_t length = sizeof(maps2)/sizeof(maps2[0]);
+
+  for (size_t i = 0; i< length; i++)
+    if (key == maps2[i].key_from && maps2[i].mod_from != 0)
+      return i;
+
+  return -1;
+}
+
+// If `mod` is in a combo map in maps2, then return index of
+// map. Otherwise return -1.
+static int is_mod_in_combo_map(unsigned int mod) {
+  size_t length = sizeof(maps2)/sizeof(maps2[0]);
+
+  for (size_t i = 0; i< length; i++)
+    if (mod == maps2[i].mod_from && maps2[i].key_from != 0)
+      return i;
+
+  return -1;
 }
 
 void handle_key2(struct input_event ev) {
@@ -535,13 +553,25 @@ void handle_key2(struct input_event ev) {
 
   //print_keyboard2();
 
+  int i = is_key_in_single_map(ev.code);
+  if (i != -1) {
+    printf("Is key in single key map.\n");
 
-  if (is_key_in_single_map(ev.code) != -1) {
-    printf("Is key in single key map\n");
+    if (maps2[i].on_hold) {
+      printf("Is key with secondary function.\n");
+    }
   }
 
   if (is_mod_in_single_map(ev.code) != -1) {
     printf("Is mod in single key map\n");
+  }
+
+  if (is_key_in_combo_map(ev.code) != -1) {
+    printf("Is key in combo key map\n");
+  }
+
+  if (is_mod_in_combo_map(ev.code) != -1) {
+    printf("Is mod in combo key map\n");
   }
 }
 
