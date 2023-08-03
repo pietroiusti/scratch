@@ -145,7 +145,7 @@ map2 maps2[] = {
   { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,    0             },
   { KEY_RIGHTCTRL, 0,            KEY_RIGHTALT,  0,            0             },
   { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,    0             },
-  { KEY_RIGHTMETA, 0,            KEY_RIGHTALT,  0,            0             },
+  { KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,            0             },
 };
 
 typedef struct {
@@ -497,13 +497,25 @@ void handle_key_merge(struct input_event ev) {
   }
 }
 
-// If `key` is in the map2, then return index of map. Otherwise return
-// -1.
+// If `key` is in a single key/mod map in maps2, then return index of
+// map. Otherwise return -1.
 static int is_key_in_single_map(unsigned int key) {
   size_t length = sizeof(maps2)/sizeof(maps2[0]);
 
   for (size_t i = 0; i< length; i++)
     if (maps2[i].key_from == key && maps2[i].mod_from == 0)
+      return i;
+
+  return -1;
+}
+
+// If `mod` is in a single key/mod map in maps2, then return index of
+// map. Otherwise return -1.
+static int is_mod_in_single_map(unsigned int key) {
+  size_t length = sizeof(maps2)/sizeof(maps2[0]);
+
+  for (size_t i = 0; i< length; i++)
+    if (key == maps2[i].mod_from && maps2[i].key_from == 0)
       return i;
 
   return -1;
@@ -528,6 +540,9 @@ void handle_key2(struct input_event ev) {
     printf("Is key in single key map\n");
   }
 
+  if (is_mod_in_single_map(ev.code) != -1) {
+    printf("Is mod in single key map\n");
+  }
 }
 
 void handle_key(struct input_event ev) {
