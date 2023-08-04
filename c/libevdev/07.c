@@ -97,6 +97,7 @@
 #include "libevdev/libevdev-uinput.h"
 #include "libevdev/libevdev.h"
 
+int last_input_was_special_combination = 0;
 
 // Modified key: key to which a primary and/or a secondary function
 // has been assigned. (Those keys to which a secondary function has
@@ -251,14 +252,19 @@ keyboard_key_state2 keyboard2[] = {
   { KEY_LEFTCTRL, 0 }, // 29
   { KEY_RIGHTCTRL, 0 }, // 97
   { KEY_LEFTALT, 0 }, // 56
-  { KEY_RIGHTALT, 0 },
+  { KEY_RIGHTALT, 0 }, // 100
+  { KEY_CAPSLOCK, 0 }, // 58
+  { KEY_ENTER, 0 }, // 28
+  { KEY_RIGHT, 0 }, // 106
+  { KEY_SYSRQ, 0 }, // 99
+  { KEY_ESC, 0 }, // 1
   { KEY_P, 0 }, // 25
   { KEY_F, 0 }, // 33
   { KEY_B, 0 }, // 48
   { KEY_N, 0 }, // 49
-  { KEY_V, 0 },
-  { KEY_A, 0 },
-  { KEY_E, 0 },
+  { KEY_V, 0 }, // 47
+  { KEY_A, 0 }, // 30
+  { KEY_E, 0 }, // 18
 };
 
 void print_keyboard2() {
@@ -293,6 +299,14 @@ int kb_state_of(unsigned int k_code) {
   for (int i = 0; i < sizeof(keyboard)/sizeof(keyboard_key_state); i++) {
     if (keyboard[i].code == k_code)
       return keyboard[i].value;
+  }
+  return -1;
+}
+
+int kb_state_of2(unsigned int k_code) {
+  for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
+    if (keyboard2[i].code == k_code)
+      return keyboard2[i].value;
   }
   return -1;
 }
@@ -545,6 +559,26 @@ static int is_mod_in_combo_map(unsigned int mod) {
   return -1;
 }
 
+// If any of the janus keys is down or held return the index of the
+// first one of them in the mod_map. Otherwise, return -1.
+static int some_jk_are_down_or_held() {
+  size_t l = sizeof(maps2)/sizeof(maps2[0]);
+
+  for (int i = 0; i < l; i++) {
+    if (maps2[i].on_hold != 0) {// we found a map of a janus key
+
+      // only one among the key and the mod is non-zero
+      int non_zero = maps2[i].key_from ? maps2[i].key_from : maps2[i].mod_from;
+      if (kb_state_of2(non_zero)) {
+        return i;
+      }
+
+    }
+  }
+
+  return -1;
+}
+
 void handle_key2(struct input_event ev) {
   printf("((((( handling %d, %d )))))\n\n", ev.code, ev.value);
 
@@ -558,7 +592,7 @@ void handle_key2(struct input_event ev) {
   if (k_sm_i && maps2[k_sm_i].on_hold) second_f = k_sm_i;
   int m_sm_i = is_mod_in_single_map(ev.code);
   int k_cm_i = is_key_in_combo_map(ev.code);
-  int im_cm_i = is_mod_in_combo_map(ev.code);
+  int m_cm_i = is_mod_in_combo_map(ev.code);
 
   if (k_sm_i != -1) {
     printf("Is key in single key map.\n");
@@ -572,10 +606,40 @@ void handle_key2(struct input_event ev) {
   if (k_cm_i != -1) {
     printf("Is key in combo key map.\n");
   }
-  if (im_cm_i != -1) {
+  if (m_cm_i != -1) {
     printf("Is mod in combo key map.\n");
   }
 
+  if (k_sm_i == -1 &&
+      k_sm_i == -1 &&
+      m_sm_i == -1 &&
+      k_cm_i == -1 &&
+      m_cm_i == -1)
+    {
+      printf("'NORMAL' KEY\n");
+
+      if (ev.value == 1 ) {
+        if (some_jk_are_down_or_held() >= 0) {
+          printf("last_input_was_special_combination = 1\n");
+          printf("send down or held jks 2nd function 1\n");
+          printf("send key 1\n");
+        } else {
+          printf("last_input_was_special_combination = 0\n");
+          printf("send key 1\n");
+        }
+      } else if (ev.value == 2) { // same as in ev.code == 1
+        if (some_jk_are_down_or_held() >= 0) {
+          printf("last_input_was_special_combination = 1\n");
+          printf("send down or held jks 2nd function 1\n");
+          printf("send key 1\n");
+        } else {
+          printf("last_input_was_special_combination = 0\n");
+          printf("send key 1\n");
+        }
+      } else { // ev.value == 0
+          printf("send key 0\n");
+      }
+    }
 }
 
 void handle_key(struct input_event ev) {
