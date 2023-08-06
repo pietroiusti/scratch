@@ -795,6 +795,36 @@ void *track_window() {
   unsigned long bytes_left;
   unsigned char *data;
 
+  XGetWindowProperty(display,
+                     root_window,
+                     active_window_atom,
+                     0,
+                     1,
+                     False,
+                     XA_WINDOW,
+                     &type_return,   //should be XA_WINDOW
+                     &format_return, //should be 32
+                     &nitems_return, //should be 1 (zero if there is no such window)
+                     &bytes_left,    //should be 0 (i'm not sure but should be atomic read)
+                     &data           //should be non-null
+		     );
+  Window focused_window = *(Window *)data;
+  if (focused_window) {
+    char* window_name1;
+    if (XFetchName(display, focused_window, &window_name1) != 0) {
+      printf("The active window is: %s\n", window_name1);
+      XFree(window_name1);
+    }
+    XClassHint class_hint;
+    if (XGetClassHint(display, focused_window, &class_hint)) {
+      char *window_class = class_hint.res_class;
+      char *window_name2 = class_hint.res_name;
+      printf("res.class = %s\n", window_class);
+      printf("res.name = %s\n", window_name2);
+      printf("\n\n");
+    }
+  }
+
   while (1) {
     XNextEvent(display, &xevent);
 
