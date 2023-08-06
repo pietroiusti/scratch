@@ -103,6 +103,8 @@
 #include <X11/Xutil.h>
 #include <pthread.h>
 
+volatile int currently_focused_window;
+
 // Modified key: key to which a primary and/or a secondary function
 // has been assigned. (Those keys to which a secondary function has
 // been assigned are called `janus keys`.)
@@ -152,6 +154,15 @@ map2 maps2[] = {
   { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,    0             },
   { KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,            0             },
 };
+
+char* mapped_windows[] = {
+  "Default", // this should not be modified
+  "Brave-browser",
+  "Emacs",
+  "foobar",
+};
+
+map2* window_maps = { maps2 };
 
 typedef struct {
   unsigned int mod_from;
@@ -776,6 +787,17 @@ void handle_key(struct input_event ev) {
   }
 }
 
+void set_currently_focused_window(char* name) {
+  int currently_focused_window_next_value = 0;
+  for (int i = 0; i < sizeof(mapped_windows)/sizeof(char*); i++) {
+    if (strcmp(name, mapped_windows[i]) == 0) {
+      currently_focused_window_next_value = i;
+    }
+  }
+  currently_focused_window = currently_focused_window_next_value;
+  printf("currently_focused_window set to %d\n", currently_focused_window_next_value);
+}
+
 void *track_window() {
   Display* display;
   XEvent xevent;
@@ -795,6 +817,7 @@ void *track_window() {
   unsigned long bytes_left;
   unsigned char *data;
 
+  // Get name of the focused window window at startup
   XGetWindowProperty(display,
                      root_window,
                      active_window_atom,
@@ -822,9 +845,12 @@ void *track_window() {
       printf("res.class = %s\n", window_class);
       printf("res.name = %s\n", window_name2);
       printf("\n\n");
+
+      set_currently_focused_window(window_class);
     }
   }
 
+  // Get name of the focused window window when focus changes
   while (1) {
     XNextEvent(display, &xevent);
 
@@ -863,6 +889,8 @@ void *track_window() {
     printf("res.class = %s\n", window_class);
     printf("res.name = %s\n", window_name2);
     printf("\n\n");
+
+    set_currently_focused_window(window_class);
   }
 }
 
