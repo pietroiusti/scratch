@@ -156,14 +156,12 @@ key_map default_window_map[] = {
 };
 
 typedef struct {
-  unsigned int id;
   char* class_name;
   unsigned int size;
   key_map maps[];
 } window_map;
 
 window_map default_map = {
-  0,
   "Default",
   8,
   {
@@ -179,7 +177,6 @@ window_map default_map = {
 };
 
 window_map brave_map = {
-  1,
   "Brave-browser",
   1,
   {
