@@ -87,6 +87,7 @@
 #include <fcntl.h>
 #include <linux/input-event-codes.h>
 #include <linux/input.h>
+#include <stddef.h> // ??
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -178,9 +179,10 @@ window_map default_map = {
 
 window_map brave_map = {
   "Brave-browser",
-  1,
-  {
-    { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,    0             },
+  2,
+  { // just some random stuff for tests
+    { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_LEFT,    0             },
+    { 0,             KEY_ESC,      0,             KEY_F,        0             },
   }
 };
 
@@ -558,7 +560,7 @@ void handle_key_merge(struct input_event ev) {
 
 // If `key` is in a single key/mod map in maps2, then return index of
 // map. Otherwise return -1.
-static int is_key_in_single_map(unsigned int key) {
+static int is_key_in_single_map(int key) {
   size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
 
   for (size_t i = 0; i< length; i++)
@@ -568,9 +570,36 @@ static int is_key_in_single_map(unsigned int key) {
   return -1;
 }
 
+static key_map* is_key_in_single_map2(int key) {
+  int i = currently_focused_window;
+
+  if (i == 0) { // only default map
+    size_t length = window_maps[i]->size;
+    for (size_t j = 0; j < length; j++)
+      if (window_maps[0]->maps[j].key_from == key && window_maps[0]->maps[j].mod_from == 0)
+        return &window_maps[0]->maps[j];
+
+  } else { // // non-default map + default map
+
+    // First search in the specific map
+    size_t length = window_maps[i]->size;
+    for (size_t j = 0; j < length; j++)
+      if (window_maps[i]->maps[j].key_from == key && window_maps[i]->maps[j].mod_from == 0)
+        return &window_maps[i]->maps[j];
+
+    // If we haven't found it and returned, then let's look in the default map
+    length = window_maps[i]->size;
+    for (size_t j = 0; j < length; j++)
+      if (window_maps[i]->maps[j].key_from == key && window_maps[i]->maps[j].mod_from == 0)
+        return &window_maps[i]->maps[j];
+  }
+
+  return 0;
+}
+
 // If `mod` is in a single key/mod map in maps2, then return index of
 // map. Otherwise return -1.
-static int is_mod_in_single_map(unsigned int mod) {
+static int is_mod_in_single_map(int mod) {
   size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
 
   for (size_t i = 0; i< length; i++)
@@ -582,7 +611,7 @@ static int is_mod_in_single_map(unsigned int mod) {
 
 // If `key` is in a combo map in maps2, then return index of
 // map. Otherwise return -1.
-static int is_key_in_combo_map(unsigned int key) {
+static int is_key_in_combo_map(int key) {
   size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
 
   for (size_t i = 0; i< length; i++)
@@ -594,7 +623,7 @@ static int is_key_in_combo_map(unsigned int key) {
 
 // If `mod` is in a combo map in maps2, then return index of
 // map. Otherwise return -1.
-static int is_mod_in_combo_map(unsigned int mod) {
+static int is_mod_in_combo_map(int mod) {
   size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
 
   for (size_t i = 0; i< length; i++)
@@ -632,15 +661,11 @@ void handle_key2(struct input_event ev) {
 
   //print_keyboard2();
 
-
-  // Compute map...
-  printf("The currently focused window id is %d", currently_focused_window);
-
-  for (size_t i = 0; i < sizeof(window_maps)/sizeof(window_map*); i++) {
-
-  }
+  printf("The currently focused window id is %d\n", currently_focused_window);
 
   int k_sm_i = is_key_in_single_map(ev.code);
+  key_map* k_sm_i2 = is_key_in_single_map2(ev.code);
+
   int second_f = 0;
   if (k_sm_i && default_window_map[k_sm_i].on_hold) second_f = k_sm_i;
   int m_sm_i = is_mod_in_single_map(ev.code);
@@ -649,6 +674,11 @@ void handle_key2(struct input_event ev) {
 
   if (k_sm_i != -1) {
     printf("Is key in single key map.\n");
+  }
+  if (k_sm_i2 != 0) {
+    printf("Is key in single key map. 2\n");
+    printf("key to: %d\n", k_sm_i2->mod_to);
+    printf("key to: %d\n", k_sm_i2->key_to);
   }
   if (default_window_map[k_sm_i].on_hold) {
     printf("Is janus key.\n");
