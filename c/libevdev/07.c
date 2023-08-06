@@ -180,9 +180,10 @@ window_map default_map = {
 window_map brave_map = {
   "Brave-browser",
   2,
-  { // just some random stuff for tests
+  { // Just some random stuff for tests
     { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_LEFT,    0             },
-    { 0,             KEY_ESC,      0,             KEY_F,        0             },
+    { 0,             KEY_ESC,      0,             KEY_F,       0             },
+    { 0,             KEY_ENTER,    0,             KEY_F,       0             },
   }
 };
 
@@ -558,19 +559,7 @@ void handle_key_merge(struct input_event ev) {
   }
 }
 
-// If `key` is in a single key/mod map in maps2, then return index of
-// map. Otherwise return -1.
-static int is_key_in_single_map(int key) {
-  size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
-
-  for (size_t i = 0; i< length; i++)
-    if (default_window_map[i].key_from == key && default_window_map[i].mod_from == 0)
-      return i;
-
-  return -1;
-}
-
-static key_map* is_key_in_single_map2(int key) {
+static key_map* is_key_in_single_map(int key) {
   int i = currently_focused_window;
 
   if (i == 0) { // only default map
@@ -663,24 +652,20 @@ void handle_key2(struct input_event ev) {
 
   printf("The currently focused window id is %d\n", currently_focused_window);
 
-  int k_sm_i = is_key_in_single_map(ev.code);
-  key_map* k_sm_i2 = is_key_in_single_map2(ev.code);
-
-  int second_f = 0;
-  if (k_sm_i && default_window_map[k_sm_i].on_hold) second_f = k_sm_i;
+  key_map* k_sm_i2 = is_key_in_single_map(ev.code);
+  // ****
+  // TODO: replace function with new ones working like the one right above
+  // ***
   int m_sm_i = is_mod_in_single_map(ev.code);
   int k_cm_i = is_key_in_combo_map(ev.code);
   int m_cm_i = is_mod_in_combo_map(ev.code);
 
-  if (k_sm_i != -1) {
-    printf("Is key in single key map.\n");
-  }
   if (k_sm_i2 != 0) {
-    printf("Is key in single key map. 2\n");
-    printf("key to: %d\n", k_sm_i2->mod_to);
-    printf("key to: %d\n", k_sm_i2->key_to);
+    printf("Is key in single key map.\n");
+    printf("Mod to: %d\n", k_sm_i2->mod_to);
+    printf("Key to: %d\n", k_sm_i2->key_to);
   }
-  if (default_window_map[k_sm_i].on_hold) {
+  if (k_sm_i2 && k_sm_i2->on_hold) {
     printf("Is janus key.\n");
   }
   if (m_sm_i != -1) {
@@ -693,35 +678,35 @@ void handle_key2(struct input_event ev) {
     printf("Is mod in combo key map.\n");
   }
 
-  if (k_sm_i == -1 &&
-      m_sm_i == -1 &&
-      k_cm_i == -1 &&
-      m_cm_i == -1)
-    {
-      printf("'NORMAL' KEY\n");
+  /* if ( // is not key in single map */
+  /*      // is not mod in single map */
+  /*      // is not key in combo map */
+  /*      // is not mod in combo map ) */
+  /*   { */
+  /*     printf("'NORMAL' KEY\n"); */
 
-      if (ev.value == 1 ) {
-        if (some_jk_are_down_or_held() >= 0) {
-          printf("last_input_was_special_combination = 1\n");
-          printf("send down or held jks 2nd function 1\n");
-          printf("send key 1\n");
-        } else {
-          printf("last_input_was_special_combination = 0\n");
-          printf("send key 1\n");
-        }
-      } else if (ev.value == 2) { // same as in ev.code == 1
-        if (some_jk_are_down_or_held() >= 0) {
-          printf("last_input_was_special_combination = 1\n");
-          printf("send down or held jks 2nd function 1\n");
-          printf("send key 1\n");
-        } else {
-          printf("last_input_was_special_combination = 0\n");
-          printf("send key 1\n");
-        }
-      } else { // ev.value == 0
-          printf("send key 0\n");
-      }
-    }
+  /*     if (ev.value == 1 ) { */
+  /*       if (some_jk_are_down_or_held() >= 0) { */
+  /*         printf("last_input_was_special_combination = 1\n"); */
+  /*         printf("send down or held jks 2nd function 1\n"); */
+  /*         printf("send key 1\n"); */
+  /*       } else { */
+  /*         printf("last_input_was_special_combination = 0\n"); */
+  /*         printf("send key 1\n"); */
+  /*       } */
+  /*     } else if (ev.value == 2) { // same as in ev.code == 1 */
+  /*       if (some_jk_are_down_or_held() >= 0) { */
+  /*         printf("last_input_was_special_combination = 1\n"); */
+  /*         printf("send down or held jks 2nd function 1\n"); */
+  /*         printf("send key 1\n"); */
+  /*       } else { */
+  /*         printf("last_input_was_special_combination = 0\n"); */
+  /*         printf("send key 1\n"); */
+  /*       } */
+  /*     } else { // ev.value == 0 */
+  /*         printf("send key 0\n"); */
+  /*     } */
+  /*   } */
 }
 
 void handle_key(struct input_event ev) {
