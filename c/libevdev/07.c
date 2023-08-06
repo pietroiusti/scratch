@@ -155,14 +155,47 @@ key_map default_window_map[] = {
   { KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,            0             },
 };
 
-char* mapped_windows[] = {
-  "Default", // this should not be modified
-  "Brave-browser",
-  "Emacs",
-  "foobar",
+typedef struct {
+  unsigned int id;
+  char* class_name;
+  unsigned int size;
+  key_map maps[];
+} window_map;
+
+window_map default_map = {
+  0,
+  "Default",
+  8,
+  {
+    { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,      KEY_LEFTALT   },
+    { 0,             KEY_ENTER,    0,             0,            KEY_RIGHTCTRL },
+    { KEY_RIGHTCTRL, KEY_ESC,      0,             KEY_RIGHT,    0             },
+    { 0,             KEY_ESC,      0,             KEY_CAPSLOCK, 0             },
+    { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,    0             },
+    { KEY_RIGHTCTRL, 0,            KEY_RIGHTALT,  0,            0             },
+    { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,    0             },
+    { KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,            0             },
+  }
 };
 
-key_map* window_maps = { default_window_map };
+window_map brave_map = {
+  1,
+  "Brave-browser",
+  1,
+  {
+    { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,    0             },
+  }
+};
+
+window_map* window_maps[] = {
+  &default_map,
+  &brave_map,
+};
+
+char* mapped_window_class_names[] = {
+  "Default", // this should not be modified
+  "Brave-browser",
+};
 
 typedef struct {
   unsigned int mod_from;
@@ -603,8 +636,12 @@ void handle_key2(struct input_event ev) {
   //print_keyboard2();
 
 
-  // Compute map
+  // Compute map...
+  printf("The currently focused window id is %d", currently_focused_window);
 
+  for (size_t i = 0; i < sizeof(window_maps)/sizeof(window_map*); i++) {
+
+  }
 
   int k_sm_i = is_key_in_single_map(ev.code);
   int second_f = 0;
@@ -793,11 +830,14 @@ void handle_key(struct input_event ev) {
 
 void set_currently_focused_window(char* name) {
   int currently_focused_window_next_value = 0;
-  for (int i = 0; i < sizeof(mapped_windows)/sizeof(char*); i++) {
-    if (strcmp(name, mapped_windows[i]) == 0) {
+
+  for (int i = 1; i < sizeof(window_maps)/sizeof(window_map*); i++) {
+    if (strcmp(name, window_maps[i]->class_name) == 0) {
       currently_focused_window_next_value = i;
+      break;
     }
   }
+
   currently_focused_window = currently_focused_window_next_value;
   printf("currently_focused_window set to %d\n", currently_focused_window_next_value);
 }
