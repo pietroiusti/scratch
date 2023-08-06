@@ -144,7 +144,7 @@ typedef struct {
   unsigned int on_hold; // on hold
 } key_map;
 
-key_map maps2[] = {
+key_map default_window_map[] = {
   { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,      KEY_LEFTALT   },
   { 0,             KEY_ENTER,    0,             0,            KEY_RIGHTCTRL },
   { KEY_RIGHTCTRL, KEY_ESC,      0,             KEY_RIGHT,    0             },
@@ -162,7 +162,7 @@ char* mapped_windows[] = {
   "foobar",
 };
 
-key_map* window_maps = { maps2 };
+key_map* window_maps = { default_window_map };
 
 typedef struct {
   unsigned int mod_from;
@@ -529,10 +529,10 @@ void handle_key_merge(struct input_event ev) {
 // If `key` is in a single key/mod map in maps2, then return index of
 // map. Otherwise return -1.
 static int is_key_in_single_map(unsigned int key) {
-  size_t length = sizeof(maps2)/sizeof(maps2[0]);
+  size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
 
   for (size_t i = 0; i< length; i++)
-    if (maps2[i].key_from == key && maps2[i].mod_from == 0)
+    if (default_window_map[i].key_from == key && default_window_map[i].mod_from == 0)
       return i;
 
   return -1;
@@ -541,10 +541,10 @@ static int is_key_in_single_map(unsigned int key) {
 // If `mod` is in a single key/mod map in maps2, then return index of
 // map. Otherwise return -1.
 static int is_mod_in_single_map(unsigned int mod) {
-  size_t length = sizeof(maps2)/sizeof(maps2[0]);
+  size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
 
   for (size_t i = 0; i< length; i++)
-    if (mod == maps2[i].mod_from && maps2[i].key_from == 0)
+    if (mod == default_window_map[i].mod_from && default_window_map[i].key_from == 0)
       return i;
 
   return -1;
@@ -553,10 +553,10 @@ static int is_mod_in_single_map(unsigned int mod) {
 // If `key` is in a combo map in maps2, then return index of
 // map. Otherwise return -1.
 static int is_key_in_combo_map(unsigned int key) {
-  size_t length = sizeof(maps2)/sizeof(maps2[0]);
+  size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
 
   for (size_t i = 0; i< length; i++)
-    if (key == maps2[i].key_from && maps2[i].mod_from != 0)
+    if (key == default_window_map[i].key_from && default_window_map[i].mod_from != 0)
       return i;
 
   return -1;
@@ -565,10 +565,10 @@ static int is_key_in_combo_map(unsigned int key) {
 // If `mod` is in a combo map in maps2, then return index of
 // map. Otherwise return -1.
 static int is_mod_in_combo_map(unsigned int mod) {
-  size_t length = sizeof(maps2)/sizeof(maps2[0]);
+  size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
 
   for (size_t i = 0; i< length; i++)
-    if (mod == maps2[i].mod_from && maps2[i].key_from != 0)
+    if (mod == default_window_map[i].mod_from && default_window_map[i].key_from != 0)
       return i;
 
   return -1;
@@ -577,13 +577,13 @@ static int is_mod_in_combo_map(unsigned int mod) {
 // If any of the janus keys is down or held return the index of the
 // first one of them in the mod_map. Otherwise, return -1.
 static int some_jk_are_down_or_held() {
-  size_t l = sizeof(maps2)/sizeof(maps2[0]);
+  size_t l = sizeof(default_window_map)/sizeof(default_window_map[0]);
 
   for (int i = 0; i < l; i++) {
-    if (maps2[i].on_hold != 0) {// we found a map of a janus key
+    if (default_window_map[i].on_hold != 0) {// we found a map of a janus key
 
       // only one among the key and the mod is non-zero
-      int non_zero = maps2[i].key_from ? maps2[i].key_from : maps2[i].mod_from;
+      int non_zero = default_window_map[i].key_from ? default_window_map[i].key_from : default_window_map[i].mod_from;
       if (kb_state_of2(non_zero)) {
         return i;
       }
@@ -602,9 +602,13 @@ void handle_key2(struct input_event ev) {
 
   //print_keyboard2();
 
+
+  // Compute map
+
+
   int k_sm_i = is_key_in_single_map(ev.code);
   int second_f = 0;
-  if (k_sm_i && maps2[k_sm_i].on_hold) second_f = k_sm_i;
+  if (k_sm_i && default_window_map[k_sm_i].on_hold) second_f = k_sm_i;
   int m_sm_i = is_mod_in_single_map(ev.code);
   int k_cm_i = is_key_in_combo_map(ev.code);
   int m_cm_i = is_mod_in_combo_map(ev.code);
@@ -612,7 +616,7 @@ void handle_key2(struct input_event ev) {
   if (k_sm_i != -1) {
     printf("Is key in single key map.\n");
   }
-  if (maps2[k_sm_i].on_hold) {
+  if (default_window_map[k_sm_i].on_hold) {
     printf("Is janus key.\n");
   }
   if (m_sm_i != -1) {
