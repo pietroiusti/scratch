@@ -142,9 +142,9 @@ typedef struct {
   unsigned int mod_to;
   unsigned int key_to;
   unsigned int on_hold; // on hold
-} map2;
+} key_map;
 
-map2 maps2[] = {
+key_map maps2[] = {
   { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,      KEY_LEFTALT   },
   { 0,             KEY_ENTER,    0,             0,            KEY_RIGHTCTRL },
   { KEY_RIGHTCTRL, KEY_ESC,      0,             KEY_RIGHT,    0             },
@@ -162,7 +162,7 @@ char* mapped_windows[] = {
   "foobar",
 };
 
-map2* window_maps = { maps2 };
+key_map* window_maps = { maps2 };
 
 typedef struct {
   unsigned int mod_from;
