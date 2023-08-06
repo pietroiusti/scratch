@@ -694,7 +694,6 @@ void handle_key2(struct input_event ev) {
   }
 
   if (k_sm_i == -1 &&
-      k_sm_i == -1 &&
       m_sm_i == -1 &&
       k_cm_i == -1 &&
       m_cm_i == -1)
