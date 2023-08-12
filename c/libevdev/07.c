@@ -568,7 +568,10 @@ static key_map* is_key_in_single_map(int key) {
       if (window_maps[0]->maps[j].key_from == key && window_maps[0]->maps[j].mod_from == 0)
         return &window_maps[0]->maps[j];
 
-  } else { // // non-default map + default map
+  } else { // non-default map + default map
+
+    // Non-default maps take precedence over the default map in this
+    // case.
 
     // First search in the specific map
     size_t length = window_maps[i]->size;
@@ -586,16 +589,33 @@ static key_map* is_key_in_single_map(int key) {
   return 0;
 }
 
-// If `mod` is in a single key/mod map in maps2, then return index of
-// map. Otherwise return -1.
-static int is_mod_in_single_map(int mod) {
-  size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
+static key_map* is_mod_in_single_map(int mod) {
+  int i = currently_focused_window;
 
-  for (size_t i = 0; i< length; i++)
-    if (mod == default_window_map[i].mod_from && default_window_map[i].key_from == 0)
-      return i;
+  if (i == 0) { // only default map
+    size_t length = window_maps[0]->size;
+    for (size_t j = 0; j < length; j++)
+      if (window_maps[0]->maps[j].key_from == 0 && window_maps[0]->maps[j].mod_from == mod)
+        return &window_maps[0]->maps[j];
+  } else { // non-default map + default map
 
-  return -1;
+    // Non-default maps take precedence over the default map in this
+    // case.
+
+    // First search in the specific map
+    size_t length = window_maps[i]->size;
+    for (size_t j = 0; j < length; j++)
+      if (window_maps[i]->maps[j].key_from == 0 && window_maps[i]->maps[j].mod_from == mod)
+        return &window_maps[i]->maps[j];
+
+    // If we haven't found it and returned, then let's look in the default map
+    length = window_maps[i]->size;
+    for (size_t j = 0; j < length; j++)
+      if (window_maps[i]->maps[j].key_from == 0 && window_maps[i]->maps[j].mod_from == mod)
+        return &window_maps[i]->maps[j];
+  }
+
+  return 0;
 }
 
 // If `key` is in a combo map in maps2, then return index of
@@ -653,10 +673,10 @@ void handle_key2(struct input_event ev) {
   printf("The currently focused window id is %d\n", currently_focused_window);
 
   key_map* k_sm_i2 = is_key_in_single_map(ev.code);
+  key_map* m_sm_i2 = is_mod_in_single_map(ev.code);
   // ****
   // TODO: replace function with new ones working like the one right above
   // ***
-  int m_sm_i = is_mod_in_single_map(ev.code);
   int k_cm_i = is_key_in_combo_map(ev.code);
   int m_cm_i = is_mod_in_combo_map(ev.code);
 
@@ -668,7 +688,7 @@ void handle_key2(struct input_event ev) {
   if (k_sm_i2 && k_sm_i2->on_hold) {
     printf("Is janus key.\n");
   }
-  if (m_sm_i != -1) {
+  if (m_sm_i2 != 0) {
     printf("Is mod in single key map.\n");
   }
   if (k_cm_i != -1) {
@@ -842,6 +862,8 @@ void handle_key(struct input_event ev) {
 void set_currently_focused_window(char* name) {
   int currently_focused_window_next_value = 0;
 
+  // Start from second element, given that the first is the default
+  // map which always applies.
   for (int i = 1; i < sizeof(window_maps)/sizeof(window_map*); i++) {
     if (strcmp(name, window_maps[i]->class_name) == 0) {
       currently_focused_window_next_value = i;
