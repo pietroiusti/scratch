@@ -164,12 +164,13 @@ typedef struct {
 
 window_map default_map = {
   "Default",
-  8,
+  9,
   {
     { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,      KEY_LEFTALT   },
     { 0,             KEY_ENTER,    0,             0,            KEY_RIGHTCTRL },
     { KEY_RIGHTCTRL, KEY_ESC,      0,             KEY_RIGHT,    0             },
     { 0,             KEY_ESC,      0,             KEY_CAPSLOCK, 0             },
+    { 0,             KEY_W,        0,             KEY_1,        0             },
     { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,    0             },
     { KEY_RIGHTCTRL, 0,            KEY_RIGHTALT,  0,            0             },
     { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,    0             },
@@ -313,6 +314,7 @@ keyboard_key_state2 keyboard2[] = {
   { KEY_V, 0 }, // 47
   { KEY_A, 0 }, // 30
   { KEY_E, 0 }, // 18
+  { KEY_W, 0 }, // 17
 };
 
 void print_keyboard2() {
@@ -677,23 +679,40 @@ static key_map* is_mod_in_combo_map(int mod) {
 }
 
 // If any of the janus keys is down or held return the index of the
-// first one of them in the mod_map. Otherwise, return -1.
+// first one of them. Otherwise, return -1.
 static int some_jk_are_down_or_held() {
-  size_t l = sizeof(default_window_map)/sizeof(default_window_map[0]);
+  int result = -1;
+  int i = currently_focused_window;
+  unsigned int length = window_maps[i]->size;
 
-  for (int i = 0; i < l; i++) {
-    if (default_window_map[i].on_hold != 0) {// we found a map of a janus key
-
-      // only one among the key and the mod is non-zero
-      int non_zero = default_window_map[i].key_from ? default_window_map[i].key_from : default_window_map[i].mod_from;
-      if (kb_state_of2(non_zero)) {
-        return i;
+  // Checks for down/held janus keys in default map
+  for (int j = 0; j < length; j++) {
+    key_map map = window_maps[0]->maps[j];
+    if (map.on_hold
+        &&
+        (kb_state_of2(map.key_from) != 0)
+        ||
+        (kb_state_of2(map.mod_from) != 0))
+      {
+        result = j;
       }
+  }
 
+  if (i != 0) { // Checks for down/held janus keys in non-default map if any
+    for (int j = 0; j < length; j++) {
+      key_map map = window_maps[i]->maps[j];
+      if (map.on_hold
+          &&
+          (kb_state_of2(map.key_from) != 0)
+          ||
+          (kb_state_of2(map.mod_from) != 0))
+        {
+          result = j;
+        }
     }
   }
 
-  return -1;
+  return result;
 }
 
 void handle_key2(struct input_event ev) {
@@ -706,62 +725,62 @@ void handle_key2(struct input_event ev) {
 
   printf("The currently focused window id is %d\n", currently_focused_window);
 
-  key_map* k_sm_i2 = is_key_in_single_map(ev.code);
-  key_map* m_sm_i2 = is_mod_in_single_map(ev.code);
-  key_map* k_cm_i2 = is_key_in_combo_map(ev.code);
-  // ****
-  // TODO: replace function with new ones working like the one right above
-  // ***
-  key_map* m_cm_i2 = is_mod_in_combo_map(ev.code);
+  key_map* k_sm_i = is_key_in_single_map(ev.code);
+  key_map* m_sm_i = is_mod_in_single_map(ev.code);
+  key_map* k_cm_i = is_key_in_combo_map(ev.code);
+  key_map* m_cm_i = is_mod_in_combo_map(ev.code);
 
-  if (k_sm_i2 != 0) {
+  if (k_sm_i != 0) {
     printf("Is key in single key map.\n");
-    printf("Mod to: %d\n", k_sm_i2->mod_to);
-    printf("Key to: %d\n", k_sm_i2->key_to);
   }
-  if (k_sm_i2 && k_sm_i2->on_hold) {
+  if (k_sm_i && k_sm_i->on_hold) {
     printf("Is janus key.\n");
   }
-  if (m_sm_i2 != 0) {
+  if (m_sm_i != 0) {
     printf("Is mod in single key map.\n");
   }
-  if (k_cm_i2 != 0) {
-    printf("Is key in combo key map. [2]\n");
-    printf("%d\n", k_cm_i2->key_to);
+  if (k_cm_i != 0) {
+    printf("Is key in combo key map.\n");
+    printf("%d\n", k_cm_i->key_to);
   }
-  if (m_cm_i2 != 0) {
-    printf("Is mod in combo key map. [2]\n");
+  if (m_cm_i != 0) {
+    printf("Is mod in combo key map.\n");
   }
 
-  /* if ( // is not key in single map */
-  /*      // is not mod in single map */
-  /*      // is not key in combo map */
-  /*      // is not mod in combo map ) */
-  /*   { */
-  /*     printf("'NORMAL' KEY\n"); */
+  if (!k_sm_i && // is not key in single map
+      !m_sm_i && // is not mod in single map
+      !k_cm_i && // is not key in combo map
+      !m_cm_i)   // is not mod in combo map
+    {
+      printf("'NORMAL' KEY\n");
 
-  /*     if (ev.value == 1 ) { */
-  /*       if (some_jk_are_down_or_held() >= 0) { */
-  /*         printf("last_input_was_special_combination = 1\n"); */
-  /*         printf("send down or held jks 2nd function 1\n"); */
-  /*         printf("send key 1\n"); */
-  /*       } else { */
-  /*         printf("last_input_was_special_combination = 0\n"); */
-  /*         printf("send key 1\n"); */
-  /*       } */
-  /*     } else if (ev.value == 2) { // same as in ev.code == 1 */
-  /*       if (some_jk_are_down_or_held() >= 0) { */
-  /*         printf("last_input_was_special_combination = 1\n"); */
-  /*         printf("send down or held jks 2nd function 1\n"); */
-  /*         printf("send key 1\n"); */
-  /*       } else { */
-  /*         printf("last_input_was_special_combination = 0\n"); */
-  /*         printf("send key 1\n"); */
-  /*       } */
-  /*     } else { // ev.value == 0 */
-  /*         printf("send key 0\n"); */
-  /*     } */
-  /*   } */
+      if (ev.value == 1 ) {
+        if (some_jk_are_down_or_held() >= 0) {
+          printf("last_input_was_special_combination = 1\n");
+          printf("send down or held jks 2nd function 1\n");
+          printf("send key 1\n");
+        } else {
+          printf("last_input_was_special_combination = 0\n");
+          printf("send key 1\n");
+        }
+      } else if (ev.value == 2) { // same as in ev.code == 1
+        if (some_jk_are_down_or_held() >= 0) {
+          printf("last_input_was_special_combination = 1\n");
+          printf("send down or held jks 2nd function 1\n");
+          printf("send key 1\n");
+        } else {
+          printf("last_input_was_special_combination = 0\n");
+          printf("send key 1\n");
+        }
+      } else { // ev.value == 0
+          printf("send key 0\n");
+      }
+    } else if (k_sm_i && // is a key in single map
+                !k_sm_i->on_hold && // is not a janus key
+                !k_cm_i) // is not in combo map
+    {
+      printf("is key in single map, is not janus, is not in combo map.\n");
+    }
 }
 
 void handle_key(struct input_event ev) {
