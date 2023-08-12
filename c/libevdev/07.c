@@ -618,16 +618,33 @@ static key_map* is_mod_in_single_map(int mod) {
   return 0;
 }
 
-// If `key` is in a combo map in maps2, then return index of
-// map. Otherwise return -1.
-static int is_key_in_combo_map(int key) {
-  size_t length = sizeof(default_window_map)/sizeof(default_window_map[0]);
+static key_map* is_key_in_combo_map(int key) {
+  int i = currently_focused_window;
 
-  for (size_t i = 0; i< length; i++)
-    if (key == default_window_map[i].key_from && default_window_map[i].mod_from != 0)
-      return i;
+  if (i == 0) {
+    size_t length = window_maps[0]->size;
+    for (size_t j = 0; j < length; j++)
+      if (window_maps[0]->maps[j].key_from == key && window_maps[0]->maps[j].mod_from != 0)
+        return &window_maps[0]->maps[j];
+  } else {
 
-  return -1;
+    // Non-default maps take precedence over the default map in this
+    // case.
+
+    // First search in the specific map
+    size_t length = window_maps[i]->size;
+    for (size_t j = 0; j < length; j++)
+      if (window_maps[i]->maps[j].key_from == key && window_maps[i]->maps[j].mod_from != 0)
+        return &window_maps[i]->maps[j];
+
+    // If we haven't found it and returned, then let's look in the default map
+    length = window_maps[i]->size;
+    for (size_t j = 0; j < length; j++)
+      if (window_maps[i]->maps[j].key_from == key && window_maps[i]->maps[j].mod_from != 0)
+        return &window_maps[i]->maps[j];
+  }
+
+  return 0;
 }
 
 // If `mod` is in a combo map in maps2, then return index of
@@ -674,10 +691,10 @@ void handle_key2(struct input_event ev) {
 
   key_map* k_sm_i2 = is_key_in_single_map(ev.code);
   key_map* m_sm_i2 = is_mod_in_single_map(ev.code);
+  key_map* k_cm_i2 = is_key_in_combo_map(ev.code);
   // ****
   // TODO: replace function with new ones working like the one right above
   // ***
-  int k_cm_i = is_key_in_combo_map(ev.code);
   int m_cm_i = is_mod_in_combo_map(ev.code);
 
   if (k_sm_i2 != 0) {
@@ -691,8 +708,9 @@ void handle_key2(struct input_event ev) {
   if (m_sm_i2 != 0) {
     printf("Is mod in single key map.\n");
   }
-  if (k_cm_i != -1) {
-    printf("Is key in combo key map.\n");
+  if (k_cm_i2 != 0) {
+    printf("Is key in combo key map. [2]\n");
+    printf("%d\n", k_cm_i2->key_to);
   }
   if (m_cm_i != -1) {
     printf("Is mod in combo key map.\n");
