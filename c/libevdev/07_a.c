@@ -752,35 +752,96 @@ void handle_key2(struct input_event ev) {
       !k_cm_i && // is not key in combo map
       !m_cm_i)   // is not mod in combo map
     {
+      // ## K/M NO MAPS #############################################
+      // Here, I guess, we should do what we do in janus key when we
+      // get a non-janus key.
       printf("'NORMAL' KEY\n");
 
       if (ev.value == 1 ) {
         if (some_jk_are_down_or_held() >= 0) {
           printf("last_input_was_special_combination = 1\n");
-          printf("send down or held jks 2nd function 1\n");
-          printf("send key 1\n");
+          printf("send down or held jks 2nd function (1)\n");
+          printf("send key 1st function (1)\n");
         } else {
           printf("last_input_was_special_combination = 0\n");
-          printf("send key 1\n");
+          printf("send key 1st function (1)\n");
         }
       } else if (ev.value == 2) { // same as in ev.code == 1
         if (some_jk_are_down_or_held() >= 0) {
           printf("last_input_was_special_combination = 1\n");
           printf("send down or held jks 2nd function 1\n");
-          printf("send key 1\n");
+          printf("send key 1st function (1)\n");
         } else {
           printf("last_input_was_special_combination = 0\n");
-          printf("send key 1\n");
+          printf("send key 1st function (1)\n");
         }
       } else { // ev.value == 0
           printf("send key 0\n");
       }
-    } else if (k_sm_i && // is a key in single map
-                !k_sm_i->on_hold && // is not a janus key
-                !k_cm_i) // is not in combo map
+    } else if ((k_sm_i || m_sm_i) && // is a key/mod in single map
+               !k_sm_i->on_hold && // is not a janus key
+               !k_cm_i) // is not in combo map
     {
+      // ## K/M SINGLE MAP, NO COMBO MAP, NO JANUS ##########################
       printf("is key in single map, is not janus, is not in combo map.\n");
+      // Here, I guess, we should do what we do in janus key when we
+      // get a non-janus key.
+
+      printf("KEY IN SINGLE MAP\n");
+      
+      if (ev.value == 1 ) {
+        if (some_jk_are_down_or_held() >= 0) {
+          printf("last_input_was_special_combination = 1\n");
+          printf("send down or held jks 2nd function (1)\n");
+          printf("send key 1st function (1)\n");
+        } else {
+          printf("last_input_was_special_combination = 0\n");
+          printf("send key 1st function (1)\n");
+        }
+      } else if (ev.value == 2) { // same as in ev.code == 1
+        if (some_jk_are_down_or_held() >= 0) {
+          printf("last_input_was_special_combination = 1\n");
+          printf("send down or held jks 2nd function 1\n");
+          printf("send key 1st function (1)\n");
+        } else {
+          printf("last_input_was_special_combination = 0\n");
+          printf("send key 1st function (1)\n");
+        }
+      } else { // ev.value == 0
+          printf("send key 0\n");
+      }
+
+    } else if ( (!k_cm_i && k_sm_i->on_hold)
+                ||
+                (!m_cm_i && m_sm_i->on_hold))
+    {
+      // ## K/M JANUS, NOT IN COMBO MAP ##########################
+      // Here I guess we should do what we do in janus key for janus
+      // keys.
+      
+      if (ev.value == 1) {
+        //clock_gettime(CLOCK_MONOTONIC, &jk->last_time_down);
+
+        
+      } else if (ev.value == 2) {
+
+      } else {
+
+      }
+      
     }
+
+    /* else if (!m_cm_i && !m_sm_i && !k_sm_i && !k_sm_i->on_hold && k_cm_i) */
+    /* { */
+    /*   // ## K in COMBO MAP, NO SINGLE MAP, NO JANUS */
+      
+      
+
+    /* } else if (!k_cm_i && !k_sm_i && !m_sm_i && !m_sm_i->on_hold && k_cm_i) */
+    /* { */
+    /*   // ## M in COMBO MAP, NO SINGLE MAP, NO JANUS */
+
+    /* } */
 }
 
 void handle_key(struct input_event ev) {
