@@ -255,9 +255,11 @@ int kb_state_of(unsigned int k_code) {
 
 struct libevdev_uinput *uidev;
 
-// Return active map of key if any, otherwise 0.
+// Return /unique/ active map of key if any, otherwise 0.
 //
-// A map is active when both mod_from and mod_key are not zero.
+// A map is active when both mod_from and mod_key are not zero. (Well,
+// here actually we consider active those maps whose whose key_from is
+// equal to ev.code and whose mod_from is not zero...)
 map *get_active_map_of_key(struct input_event ev) {
   int number_of_active_maps = 0;
   int index = 0;
@@ -277,9 +279,11 @@ map *get_active_map_of_key(struct input_event ev) {
     return 0;
 }
 
-// Return active map of mod if any, otherwise 0.
+// Return /unique/ active map of mod if any, otherwise 0.
 //
-// A map is active when both mod_from and mod_key are not zero.
+// A map is active when both mod_from and mod_key are not zero. (Well,
+// here actually we consider active those maps whose whose mod_from is
+// equal to ev.code and whose key_from is not zero...)
 map* get_active_map_of_mod(struct input_event ev) {
   int number_of_active_maps = 0;
   int index = 0;
