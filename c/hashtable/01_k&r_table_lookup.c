@@ -55,7 +55,16 @@ struct nlist *install(char *name, char *defn)
 
 int main(void)
 {
-  printf("hello world\n");
+  printf("Installing 'giulio'...\n");
+  install("giulio", "my name");
+
+  printf("Looking up...\n");
+  struct nlist *pointer = lookup("giulio");
+
+  if (pointer) {
+    printf("Found!\n");
+    printf("Def: %s\n", pointer->defn);
+  }
 
   return 0;
 }
