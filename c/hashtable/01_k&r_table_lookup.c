@@ -33,8 +33,6 @@ struct nlist *lookup (char *s)
   return NULL;   /* not found */
 }
 
-struct nlist *lookup(char *);
-
 /* install: put (name, defn) in hashtab */
 struct nlist *install(char *name, char *defn)
 {
