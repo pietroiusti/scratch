@@ -542,6 +542,11 @@ static key_map* is_mod_in_combo_map(int mod) {
   return 0;
 }
 
+int primary_function_of (int key) {
+  // TODO
+  return 0;
+}
+
 void handle_key(struct input_event ev) {
   printf("\n\n((((( handling %d, %d )))))\n\n", ev.code, ev.value);
 
@@ -573,6 +578,32 @@ void handle_key(struct input_event ev) {
   if (m_cm_i != 0) {
     printf("Is mod in combo key map.\n");
   }
+
+
+  key_map* map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
+  key_map* map_of_mod = is_mod_in_uniquely_active_combo_map(ev.code);
+
+  if (map_of_key) {
+    printf("Handling key of one or more combo maps one of which is currently uniquely active.\n");
+    if (ev.value == 1) {
+      send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
+      if (map_of_key->mod_to)
+        send_key_ev_and_sync(uidev, map_of_key->mod_to, 1);
+
+      send_key_ev_and_sync(uidev, primary_function_of(map_of_key->key_to), 1);
+    } else if (ev.value == 2) {
+
+    } else if (ev.value == 0) {
+
+    }
+  } else if (map_of_mod) {
+    printf("Handling mod of one or more combo maps one of which is currently uniquely active.\n");
+
+  } else {
+
+  }
+
+  return;
 
   if (k_cm_i) { // ## NON-MOD KEY PRESS PRESENT IN ONE OR MORE COMBO MAP
     printf("We are in the k_cm_i block.\n");
