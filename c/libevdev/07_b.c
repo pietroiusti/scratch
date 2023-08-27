@@ -97,7 +97,7 @@ typedef struct {
 typedef struct {
   char* class_name;
   unsigned int size;
-  key_map maps[];
+  key_map key_maps[];
 } window_map;
 
 window_map default_map = {
@@ -276,8 +276,8 @@ static key_map* is_key_in_single_map(int key) {
   if (i == 0) { // only default map
     size_t length = window_maps[i]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[0]->maps[j].key_from == key && window_maps[0]->maps[j].mod_from == 0)
-        return &window_maps[0]->maps[j];
+      if (window_maps[0]->key_maps[j].key_from == key && window_maps[0]->key_maps[j].mod_from == 0)
+        return &window_maps[0]->key_maps[j];
 
   } else { // non-default map + default map
 
@@ -287,14 +287,14 @@ static key_map* is_key_in_single_map(int key) {
     // First search in the specific map
     size_t length = window_maps[i]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[i]->maps[j].key_from == key && window_maps[i]->maps[j].mod_from == 0)
-        return &window_maps[i]->maps[j];
+      if (window_maps[i]->key_maps[j].key_from == key && window_maps[i]->key_maps[j].mod_from == 0)
+        return &window_maps[i]->key_maps[j];
 
     // If we haven't found it and returned, then let's look in the default map
     length = window_maps[i]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[i]->maps[j].key_from == key && window_maps[i]->maps[j].mod_from == 0)
-        return &window_maps[i]->maps[j];
+      if (window_maps[i]->key_maps[j].key_from == key && window_maps[i]->key_maps[j].mod_from == 0)
+        return &window_maps[i]->key_maps[j];
   }
 
   return 0;
@@ -306,8 +306,8 @@ static key_map* is_mod_in_single_map(int mod) {
   if (i == 0) { // only default map
     size_t length = window_maps[0]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[0]->maps[j].key_from == 0 && window_maps[0]->maps[j].mod_from == mod)
-        return &window_maps[0]->maps[j];
+      if (window_maps[0]->key_maps[j].key_from == 0 && window_maps[0]->key_maps[j].mod_from == mod)
+        return &window_maps[0]->key_maps[j];
   } else { // non-default map + default map
 
     // Non-default maps take precedence over the default map in this
@@ -316,14 +316,14 @@ static key_map* is_mod_in_single_map(int mod) {
     // First search in the specific map
     size_t length = window_maps[i]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[i]->maps[j].key_from == 0 && window_maps[i]->maps[j].mod_from == mod)
-        return &window_maps[i]->maps[j];
+      if (window_maps[i]->key_maps[j].key_from == 0 && window_maps[i]->key_maps[j].mod_from == mod)
+        return &window_maps[i]->key_maps[j];
 
     // If we haven't found it and returned, then let's look in the default map
     length = window_maps[i]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[i]->maps[j].key_from == 0 && window_maps[i]->maps[j].mod_from == mod)
-        return &window_maps[i]->maps[j];
+      if (window_maps[i]->key_maps[j].key_from == 0 && window_maps[i]->key_maps[j].mod_from == mod)
+        return &window_maps[i]->key_maps[j];
   }
 
   return 0;
@@ -339,12 +339,13 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
   key_map* non_default_win_map_result = 0;
 
   if (i != 0) {
-    size_t length = window_maps[i]->size;
+    window_map* w_map = window_maps[i];
+    size_t length = w_map->size;
     for (size_t j = 0; j < length; j++) {
-      if (window_maps[i]->maps[j].key_from == key && window_maps[i]->maps[j].mod_from != 0) {
-        //return &window_maps[i]->maps[j];
+      if (w_map->key_maps[j].key_from == key && w_map->key_maps[j].mod_from != 0) {
+        //return &w_map->maps[j];
         if (!non_default_win_map_result) {
-          non_default_win_map_result = &window_maps[i]->maps[j];
+          non_default_win_map_result = &w_map->key_maps[j];
         } else {
           return 0; // We found more than one active combo map in the non-default window map;
         }
@@ -353,11 +354,13 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
   }
 
   if (!non_default_win_map_result) {
-    size_t length = window_maps[0]->size;
+    // Find relevant key map in default window map, if any.
+    window_map* default_w_map = window_maps[0];
+    size_t length = default_w_map->size;
     for (size_t j = 0; j < length; j++) {
-      if (window_maps[0]->maps[j].key_from == key && window_maps[0]->maps[j].mod_from != 0) {
+      if (default_w_map->key_maps[j].key_from == key && default_w_map->key_maps[j].mod_from != 0) {
         if (!default_win_map_result) {
-          default_win_map_result = &window_maps[0]->maps[j];
+          default_win_map_result = &default_w_map->key_maps[j];
         } else {
           return 0; // We found more than one active combo map in the default window map;
         }
@@ -377,8 +380,8 @@ static key_map* is_key_in_combo_map(int key) {
   if (i == 0) {
     size_t length = window_maps[0]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[0]->maps[j].key_from == key && window_maps[0]->maps[j].mod_from != 0)
-        return &window_maps[0]->maps[j];
+      if (window_maps[0]->key_maps[j].key_from == key && window_maps[0]->key_maps[j].mod_from != 0)
+        return &window_maps[0]->key_maps[j];
   } else {
 
     // Non-default maps take precedence over the default map in this
@@ -387,14 +390,14 @@ static key_map* is_key_in_combo_map(int key) {
     // First search in the specific map
     size_t length = window_maps[i]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[i]->maps[j].key_from == key && window_maps[i]->maps[j].mod_from != 0)
-        return &window_maps[i]->maps[j];
+      if (window_maps[i]->key_maps[j].key_from == key && window_maps[i]->key_maps[j].mod_from != 0)
+        return &window_maps[i]->key_maps[j];
 
     // If we haven't found it and returned, then let's look in the default map
     length = window_maps[i]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[i]->maps[j].key_from == key && window_maps[i]->maps[j].mod_from != 0)
-        return &window_maps[i]->maps[j];
+      if (window_maps[i]->key_maps[j].key_from == key && window_maps[i]->key_maps[j].mod_from != 0)
+        return &window_maps[i]->key_maps[j];
   }
 
   return 0;
@@ -406,8 +409,8 @@ static key_map* is_mod_in_combo_map(int mod) {
   if (i == 0) {
     size_t length = window_maps[0]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[0]->maps[j].key_from != 0 && window_maps[0]->maps[j].mod_from == mod)
-        return &window_maps[0]->maps[j];
+      if (window_maps[0]->key_maps[j].key_from != 0 && window_maps[0]->key_maps[j].mod_from == mod)
+        return &window_maps[0]->key_maps[j];
   } else {
 
     // Non-default maps take precedence over the default map in this
@@ -416,14 +419,14 @@ static key_map* is_mod_in_combo_map(int mod) {
     // First search in the specific map
     size_t length = window_maps[i]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[i]->maps[j].key_from != 0 && window_maps[i]->maps[j].mod_from == mod)
-        return &window_maps[i]->maps[j];
+      if (window_maps[i]->key_maps[j].key_from != 0 && window_maps[i]->key_maps[j].mod_from == mod)
+        return &window_maps[i]->key_maps[j];
 
     // If we haven't found it and returned, then let's look in the default map
     length = window_maps[i]->size;
     for (size_t j = 0; j < length; j++)
-      if (window_maps[i]->maps[j].key_from != 0 && window_maps[i]->maps[j].mod_from == mod)
-        return &window_maps[i]->maps[j];
+      if (window_maps[i]->key_maps[j].key_from != 0 && window_maps[i]->key_maps[j].mod_from == mod)
+        return &window_maps[i]->key_maps[j];
   }
 
   return 0;
