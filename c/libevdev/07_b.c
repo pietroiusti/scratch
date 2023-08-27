@@ -118,7 +118,7 @@ window_map default_map = {
 
 window_map brave_map = {
   "Brave-browser",
-  2,
+  3,
   { // Just some random stuff for tests
     { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_LEFT,    0             },
     { 0,             KEY_ESC,      0,             KEY_F,       0             },
