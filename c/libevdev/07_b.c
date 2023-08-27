@@ -329,25 +329,55 @@ static key_map* is_mod_in_single_map(int mod) {
   return 0;
 }
 
-// Return combo key_map which is uniquely active. A combo key map is
-// uniquely active if no other combo key map is active. The combo key
-// map of that pertain to a non-standard window map take precedence
-// over the key combo key maps in the default window map.
+// Return pointer to combo key map which is uniquely active, if any,
+// otherwise return 0. A combo key map is uniquely active if it's
+// active and no other combo key map is active.
+//
+// What if there is an active key map in the specific window map and
+// an also an active key map, a different one, in the default window
+// map?
+//
+//     Suppose I keep down RCTRL and RALT and then I tap F. A RCTRL+F
+//     non-default map and a RALT+F default map might exist. What to
+//     do in this case? I think here we should be sending
+//     RCTRL+RALT+F, so neither maps should be considered active; we
+//     should return 0.
+//
+//         This is making me think: suppose, again, I keep down RCTRL
+//         and RALT and then I tap F. Furthermore, suppose there is
+//         only one relevant combo map --- say RCTRL+F. The latter map
+//         should not be considered active; we should be sending
+//         RCTRL+RALT+F, and we should NOT be sending
+//         RALT+REMAPPED(RCTRL+F). [TODO]
+//
+// What if there is an active key map in the specific window map and
+// an also an active key map, a the same one, in the default window
+// map?
+//
+//     The specific take precedence over the default. In this case the
+//     map should count as uniquely active I think. Let's temporarily
+//     solve this problem by forbidding the user to add the same map
+//     both as default and non default.
+//
+// If there is only a specific map? Obvious.
+//
+// If there is only a default map? Obvious.
+//
 static key_map* is_key_in_uniquely_active_combo_map(int key) {
   int i = currently_focused_window;
-  key_map* default_win_map_result = 0;
-  key_map* non_default_win_map_result = 0;
+  key_map* default_win_map_result = 0; // key_map in default window map
+  key_map* non_default_win_map_result = 0; // key_map in non-default window map
 
+  // Find relevant key map in non-default window map, if any.
   if (i != 0) {
     window_map* w_map = window_maps[i];
     size_t length = w_map->size;
     for (size_t j = 0; j < length; j++) {
       if (w_map->key_maps[j].key_from == key && w_map->key_maps[j].mod_from != 0) {
-        //return &w_map->maps[j];
         if (!non_default_win_map_result) {
           non_default_win_map_result = &w_map->key_maps[j];
         } else {
-          return 0; // We found more than one active combo map in the non-default window map;
+          return 0; // We found more than one active combo map in the non-default window map
         }
       }
     }
@@ -362,16 +392,19 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
         if (!default_win_map_result) {
           default_win_map_result = &default_w_map->key_maps[j];
         } else {
-          return 0; // We found more than one active combo map in the default window map;
+          return 0; // We found more than one active combo map in the default window map
         }
       }
     }
   }
 
   // Non-default maps take precedence over the default map
-  if (non_default_win_map_result) return non_default_win_map_result;
-  if (default_win_map_result) return default_win_map_result;
-  return 0;
+  if (non_default_win_map_result && default_win_map_result)
+    return 0;
+  else if (non_default_win_map_result)
+    return non_default_win_map_result;
+  else
+    return default_win_map_result;
 }
 
 static key_map* is_key_in_combo_map(int key) {
@@ -463,7 +496,7 @@ void handle_key(struct input_event ev) {
   if (m_cm_i != 0) {
     printf("Is mod in combo key map.\n");
   }
-  
+
   if (k_cm_i) { // ## NON-MOD KEY PRESS PRESENT IN ONE OR MORE COMBO MAP
     printf("We are in the k_cm_i block.\n");
 
@@ -498,7 +531,7 @@ void handle_key(struct input_event ev) {
       //
       printf("Handling key of one or more combo maps none of which is currently active.\n");
       printf("<{([*])}>===> SEND PRIMARY FUNCTION OF KEY RECEIVED WITH VALUE RECEIVED\n");
-    }    
+    }
   } else if (m_cm_i) { // ## MOD KEY PRESS PRESENT IN ONE OR MORE COMBO MAP
     printf("We are in the m_cm_i block.\n");
 
@@ -530,7 +563,7 @@ void handle_key(struct input_event ev) {
       printf("<{([*])}>===> SEND PRIMARY FUNCTION OF MOD RECEIVED WITH VALUE RECEIVED\n");
     }
   } else { // ## MOD/NON-MOD NO-MAP KEY PRESS
-    
+
   }
 }
 
