@@ -260,7 +260,7 @@ void set_keyboard_state2(struct input_event ev) {
   }
 }
 
-int state_of(unsigned int k_code) {
+int physical_state_of(unsigned int k_code) {
   for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
     if (keyboard2[i].code == k_code)
       return keyboard2[i].value;
@@ -369,6 +369,13 @@ static int are_the_same_map(key_map* km1, key_map* km2) {
 //
 // If there is only a default map? Obvious.
 //
+//
+// TODO IMPORTANT: the usage of psysical_state_of is conceptually
+// mistaken. Suppose we have RCTRL+F combo map. Suppose we are
+// handling a F event. If, say, RALT is in a single map tha maps it to
+// RCTRL, then the RCTRL+F combo map should be considered active. We
+// could say that the relevant state is here is logical, not
+// physical. I should probably write a `logical_state_of` function.
 static key_map* is_key_in_uniquely_active_combo_map(int key) {
   int i = currently_focused_window;
   key_map* default_win_map_result = 0; // key_map in default window map
@@ -380,7 +387,7 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
     size_t length = w_map->size;
     for (size_t j = 0; j < length; j++) {
       if (w_map->key_maps[j].key_from == key && w_map->key_maps[j].mod_from) {
-        if (state_of(w_map->key_maps[j].mod_from)) {
+        if (physical_state_of(w_map->key_maps[j].mod_from)) {
           if (!non_default_win_map_result) {
             non_default_win_map_result = &w_map->key_maps[j];
           } else {
@@ -397,7 +404,7 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
     size_t length = default_w_map->size;
     for (size_t j = 0; j < length; j++) {
       if (default_w_map->key_maps[j].key_from == key && default_w_map->key_maps[j].mod_from) {
-        if (state_of(default_w_map->key_maps[j].mod_from)) {
+        if (physical_state_of(default_w_map->key_maps[j].mod_from)) {
           if (!default_win_map_result) {
             default_win_map_result = &default_w_map->key_maps[j];
           } else {
@@ -436,7 +443,7 @@ static key_map* is_mod_in_uniquely_active_combo_map(int key) {
     for (size_t j = 0; j < length; j++) {
       if (w_map->key_maps[j].mod_from == key && w_map->key_maps[j].key_from) {
 
-        if (state_of(w_map->key_maps[j].key_from)) {
+        if (physical_state_of(w_map->key_maps[j].key_from)) {
           if (!non_default_win_map_result) {
             non_default_win_map_result = &w_map->key_maps[j];
           } else {
@@ -453,7 +460,7 @@ static key_map* is_mod_in_uniquely_active_combo_map(int key) {
     size_t length = default_w_map->size;
     for (size_t j = 0; j < length; j++) {
       if (default_w_map->key_maps[j].mod_from == key && default_w_map->key_maps[j].key_from) {
-        if (state_of(default_w_map->key_maps[j].key_from)) {
+        if (physical_state_of(default_w_map->key_maps[j].key_from)) {
           if (!default_win_map_result) {
             default_win_map_result = &default_w_map->key_maps[j];
           } else {
