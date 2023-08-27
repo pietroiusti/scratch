@@ -379,9 +379,8 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
     window_map* w_map = window_maps[i];
     size_t length = w_map->size;
     for (size_t j = 0; j < length; j++) {
-      if (w_map->key_maps[j].key_from == key && w_map->key_maps[j].mod_from != 0) {
-
-        if (state_of(w_map->key_maps[j].mod_from) != 0) {
+      if (w_map->key_maps[j].key_from == key && w_map->key_maps[j].mod_from) {
+        if (state_of(w_map->key_maps[j].mod_from)) {
           if (!non_default_win_map_result) {
             non_default_win_map_result = &w_map->key_maps[j];
           } else {
@@ -397,7 +396,7 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
     window_map* default_w_map = window_maps[0];
     size_t length = default_w_map->size;
     for (size_t j = 0; j < length; j++) {
-      if (default_w_map->key_maps[j].key_from == key && default_w_map->key_maps[j].mod_from != 0) {
+      if (default_w_map->key_maps[j].key_from == key && default_w_map->key_maps[j].mod_from) {
         if (state_of(default_w_map->key_maps[j].mod_from)) {
           if (!default_win_map_result) {
             default_win_map_result = &default_w_map->key_maps[j];
@@ -411,9 +410,9 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
 
   if (non_default_win_map_result && default_win_map_result) {
     // if they are the same map, then return the non-default
-    if(are_the_same_map(non_default_win_map_result, default_win_map_result))
+    if (are_the_same_map(non_default_win_map_result, default_win_map_result))
       return non_default_win_map_result;
-    else // if they are not the same map, then we considere neither active [TODO: explain]
+    else // if they are not the same map, then neither is considered active [TODO: explain]
       return 0;
   } else if (non_default_win_map_result) {
     return non_default_win_map_result;
