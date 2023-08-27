@@ -64,7 +64,10 @@
 #include <X11/Xutil.h>
 #include <pthread.h>
 
-volatile int currently_focused_window;
+// 0 is the index of the default window map (in the window_maps array)
+// which represents the set of those key_maps which are valid in any
+// window, unless overruled by a specific window map.
+volatile int currently_focused_window = 0;
 
 // Modified key: key to which a primary and/or a secondary function
 // has been assigned. (Those keys to which a secondary function has
