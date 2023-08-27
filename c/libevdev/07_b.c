@@ -260,7 +260,7 @@ void set_keyboard_state2(struct input_event ev) {
   }
 }
 
-int kb_state_of2(unsigned int k_code) {
+int state_of(unsigned int k_code) {
   for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
     if (keyboard2[i].code == k_code)
       return keyboard2[i].value;
@@ -329,6 +329,12 @@ static key_map* is_mod_in_single_map(int mod) {
   return 0;
 }
 
+static int are_the_same_map(key_map* km1, key_map* km2) {
+  return km1->key_from == km2->key_from
+         &&
+         km1->mod_from == km2->mod_from;
+}
+
 // Return pointer to combo key map which is uniquely active, if any,
 // otherwise return 0. A combo key map is uniquely active if it's
 // active and no other combo key map is active.
@@ -351,13 +357,13 @@ static key_map* is_mod_in_single_map(int mod) {
 //         RALT+REMAPPED(RCTRL+F). [TODO]
 //
 // What if there is an active key map in the specific window map and
-// an also an active key map, a the same one, in the default window
-// map?
+// an also an active key map, the same one, in the default window map?
 //
-//     The specific take precedence over the default. In this case the
-//     map should count as uniquely active I think. Let's temporarily
-//     solve this problem by forbidding the user to add the same map
-//     both as default and non default.
+//     The specific takes precedence over the default. For example, we
+//     might have RALT+F in the default window map mapped to FOO and
+//     in the brave map mapped to BAR. If we are in brave and hit
+//     RALT+F, then the key map in the brave map should be considered
+//     active.
 //
 // If there is only a specific map? Obvious.
 //
@@ -374,10 +380,13 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
     size_t length = w_map->size;
     for (size_t j = 0; j < length; j++) {
       if (w_map->key_maps[j].key_from == key && w_map->key_maps[j].mod_from != 0) {
-        if (!non_default_win_map_result) {
-          non_default_win_map_result = &w_map->key_maps[j];
-        } else {
-          return 0; // We found more than one active combo map in the non-default window map
+
+        if (state_of(w_map->key_maps[j].mod_from) != 0) {
+          if (!non_default_win_map_result) {
+            non_default_win_map_result = &w_map->key_maps[j];
+          } else {
+            return 0; // We found more than one active combo map in the non-default window map
+          }
         }
       }
     }
@@ -389,22 +398,28 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
     size_t length = default_w_map->size;
     for (size_t j = 0; j < length; j++) {
       if (default_w_map->key_maps[j].key_from == key && default_w_map->key_maps[j].mod_from != 0) {
-        if (!default_win_map_result) {
-          default_win_map_result = &default_w_map->key_maps[j];
-        } else {
-          return 0; // We found more than one active combo map in the default window map
+        if (state_of(default_w_map->key_maps[j].mod_from)) {
+          if (!default_win_map_result) {
+            default_win_map_result = &default_w_map->key_maps[j];
+          } else {
+            return 0; // We found more than one active combo map in the default window map
+          }
         }
       }
     }
   }
 
-  // Non-default maps take precedence over the default map
-  if (non_default_win_map_result && default_win_map_result)
-    return 0;
-  else if (non_default_win_map_result)
+  if (non_default_win_map_result && default_win_map_result) {
+    // if they are the same map, then return the non-default
+    if(are_the_same_map(non_default_win_map_result, default_win_map_result))
+      return non_default_win_map_result;
+    else // if they are not the same map, then we considere neither active [TODO: explain]
+      return 0;
+  } else if (non_default_win_map_result) {
     return non_default_win_map_result;
-  else
+  } else {
     return default_win_map_result;
+  }
 }
 
 static key_map* is_key_in_combo_map(int key) {
