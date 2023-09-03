@@ -91,7 +91,7 @@ typedef struct {
   unsigned int key_from;
   unsigned int mod_to;
   unsigned int key_to;
-  unsigned int on_hold; // on hold
+  unsigned int on_hold;
 } key_map;
 
 typedef struct {
@@ -104,6 +104,7 @@ window_map default_map = {
   "Default",
   9,
   {
+    //mod_from       key_from      mod_to         key_to        on_hold
     { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,      KEY_LEFTALT   },
     { 0,             KEY_ENTER,    0,             0,            KEY_RIGHTCTRL },
     { KEY_RIGHTCTRL, KEY_ESC,      0,             KEY_RIGHT,    0             },
