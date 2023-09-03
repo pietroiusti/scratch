@@ -370,26 +370,27 @@ static int are_the_same_map(key_map* km1, key_map* km2) {
 // If there is only a default map? Obvious.
 //
 //
-// TODO IMPORTANT: the usage of psysical_state_of is conceptually
-// mistaken. Suppose we have RCTRL+F combo map. Suppose we are
-// handling a F event. If, say, RALT is in a single map tha maps it to
-// RCTRL, then the RCTRL+F combo map should be considered active. We
-// could say that the relevant state is here is logical, not
-// physical. I should probably write a `logical_state_of` function.
+// TODO IMPORTANT: the usage of physical_state_of is conceptually
+// mistaken. Suppose that, in our config, we have RCTRL+F combo map,
+// and moreover ENTER is mapped to RCTRL. Suppose are handling a F
+// event, while the ENTER physical key is down. In this case, RCTRL+F
+// combo map should be considered active. We could say that the
+// relevant state is here is logical, not physical. I should probably
+// write a `logical_state_of` function.
 static key_map* is_key_in_uniquely_active_combo_map(int key) {
   int i = currently_focused_window;
   key_map* default_win_map_result = 0; // key_map in default window map
   key_map* non_default_win_map_result = 0; // key_map in non-default window map
 
-  // Find relevant key map in non-default window map, if any.
   if (i != 0) {
+    // Find relevant key map, if any, in non-default window map.
     window_map* w_map = window_maps[i];
-    size_t length = w_map->size;
-    for (size_t j = 0; j < length; j++) {
-      if (w_map->key_maps[j].key_from == key && w_map->key_maps[j].mod_from) {
-        if (physical_state_of(w_map->key_maps[j].mod_from)) {
+    for (size_t j = 0; j < w_map->size; j++) {
+      key_map key_map = w_map->key_maps[j];
+      if (key_map.key_from == key && key_map.mod_from) {
+        if (physical_state_of(key_map.mod_from)) {
           if (!non_default_win_map_result) {
-            non_default_win_map_result = &w_map->key_maps[j];
+            non_default_win_map_result = &key_map;
           } else {
             return 0; // We found more than one active combo map in the non-default window map
           }
@@ -399,14 +400,14 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
   }
 
   if (!non_default_win_map_result) {
-    // Find relevant key map in default window map, if any.
+    // Find relevant key map, if any, in default window map.
     window_map* default_w_map = window_maps[0];
-    size_t length = default_w_map->size;
-    for (size_t j = 0; j < length; j++) {
-      if (default_w_map->key_maps[j].key_from == key && default_w_map->key_maps[j].mod_from) {
-        if (physical_state_of(default_w_map->key_maps[j].mod_from)) {
+    for (size_t j = 0; j < default_w_map->size; j++) {
+      key_map key_map = default_w_map->key_maps[j];
+      if (key_map.key_from == key && key_map.mod_from) {
+        if (physical_state_of(key_map.mod_from)) {
           if (!default_win_map_result) {
-            default_win_map_result = &default_w_map->key_maps[j];
+            default_win_map_result = &key_map;
           } else {
             return 0; // We found more than one active combo map in the default window map
           }
