@@ -3,10 +3,10 @@
   have already developed elsewhere separately:
 
   - 1) Map single keys to other single keys (this function was
-    performed by janus_key).
+    performed by janus_key). (E.g.,
 
     CAPS -> ESC on tap
-    ESC -> CAPS on tap
+    ESC -> CAPS on tap .)
 
   AND
 
@@ -32,7 +32,7 @@
 
   [After 1) and 2) we will need add the final functionality:
   attributing certain keys a secondary function on hold. Originally
-  performed by janus-key]
+  performed by janus-key.]
 
   ###### ###### ###### ###### ###### ######
 
@@ -580,23 +580,23 @@ void handle_key(struct input_event ev) {
   }
 
 
-  key_map* map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
-  key_map* map_of_mod = is_mod_in_uniquely_active_combo_map(ev.code);
+  key_map* uniquely_active_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
+  key_map* uniquely_active_map_of_mod = is_mod_in_uniquely_active_combo_map(ev.code);
 
-  if (map_of_key) {
+  if (uniquely_active_map_of_key) {
     printf("Handling key of one or more combo maps one of which is currently uniquely active.\n");
     if (ev.value == 1) {
-      send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
-      if (map_of_key->mod_to)
-        send_key_ev_and_sync(uidev, map_of_key->mod_to, 1);
+      send_key_ev_and_sync(uidev, uniquely_active_map_of_key->mod_from, 0);
+      if (uniquely_active_map_of_key->mod_to)
+        send_key_ev_and_sync(uidev, uniquely_active_map_of_key->mod_to, 1);
 
-      send_key_ev_and_sync(uidev, primary_function_of(map_of_key->key_to), 1);
+      send_key_ev_and_sync(uidev, primary_function_of(uniquely_active_map_of_key->key_to), 1);
     } else if (ev.value == 2) {
 
     } else if (ev.value == 0) {
 
     }
-  } else if (map_of_mod) {
+  } else if (uniquely_active_map_of_mod) {
     printf("Handling mod of one or more combo maps one of which is currently uniquely active.\n");
 
   } else {
