@@ -271,7 +271,7 @@ int logical_state_of_key(unsigned int k) {
   // If it's primary function is not remapped in a single key
   if (!its_primary_fun_is_remapped) {
     // if it's physically down
-    if (physical_state_of(0)) {
+    if (physical_state_of(k)) {
       return 1;
     }
   }
