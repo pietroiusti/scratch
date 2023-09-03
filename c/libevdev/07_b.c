@@ -514,8 +514,41 @@ static key_map* is_mod_in_combo_map(int mod) {
 }
 
 int primary_function_of (int key) {
-  // TODO
-  return 0;
+  int i = currently_focused_window;
+
+  if (i != 0) {
+    for (int j = 0; j < window_maps[i]->size; j++) {
+      if (window_maps[i]->key_maps[j].key_from == key &&
+          !window_maps[i]->key_maps[j].mod_from) {
+        return window_maps[i]->key_maps[j].key_to
+               ? window_maps[i]->key_maps[j].key_to
+               : key;
+      }
+      if (window_maps[i]->key_maps[j].mod_from == key &&
+          !window_maps[i]->key_maps[j].key_from) {
+        return window_maps[i]->key_maps[j].key_to
+               ? window_maps[i]->key_maps[j].key_to
+               : key;
+      }
+    }
+  }
+
+  for (int j = 0; j < window_maps[i]->size; j++) {
+    if (window_maps[0]->key_maps[j].key_from == key &&
+        !window_maps[0]->key_maps[j].mod_from) {
+      return window_maps[0]->key_maps[j].key_to
+             ? window_maps[0]->key_maps[j].key_to
+             : key;
+    }
+    if (window_maps[0]->key_maps[j].mod_from == key &&
+        !window_maps[0]->key_maps[j].key_from) {
+      return window_maps[0]->key_maps[j].key_to
+             ? window_maps[0]->key_maps[j].key_to
+             : key;
+    }
+  }
+
+  return key;
 }
 
 void handle_key(struct input_event ev) {
