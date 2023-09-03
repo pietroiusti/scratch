@@ -102,7 +102,7 @@ typedef struct {
 
 window_map default_map = {
   "Default",
-  9,
+  11,
   {
     //mod_from       key_from      mod_to         key_to        on_hold
     { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,      KEY_LEFTALT   },
@@ -114,6 +114,8 @@ window_map default_map = {
     { KEY_RIGHTCTRL, 0,            KEY_RIGHTALT,  0,            0             },
     { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,    0             },
     { KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,            0             },
+    { 0,             KEY_A,        0,             KEY_RIGHTCTRL,0             },
+    { 0,             KEY_Q,        0,             KEY_F,        0             },
   }
 };
 
@@ -190,6 +192,7 @@ keyboard_key_state2 keyboard2[] = {
   { KEY_E, 0 }, // 18
   { KEY_W, 0 }, // 17
   { KEY_G, 0 }, // 34
+  { KEY_Q, 0 }, // 16
 };
 
 void print_keyboard2() {
@@ -221,21 +224,96 @@ int physical_state_of(unsigned int k_code) {
   return -1;
 }
 
-int logical_state_of(unsigned int k_code) {
-  // TODO
+int primary_function_of_key_is_remapped(unsigned int k) {
+  int i = currently_focused_window;
+  for (int j = 0; j < window_maps[i]->size; j++) {
+    if (window_maps[i]->key_maps[i].key_from == k &&
+        !window_maps[i]->key_maps[i].mod_from) {
+      return 1;
+    }
+  }
+  for (int j = 0; j < window_maps[0]->size; j++) {
+    if (window_maps[0]->key_maps[i].key_from == k &&
+        !window_maps[0]->key_maps[i].mod_from) {
+      return 1;
+    }
+  }
+  return 0;
+}
 
-  // For now:
-  return physical_state_of(k_code);
+// If (mod_from, key_from) pair is remapped in window map with index
+// i, then return 1; otherwise return 0.
+int is_not_in_map(unsigned mod_from, unsigned key_from, unsigned i) {
+  for (int j = 0; j < window_maps[i]->size; j++) {
+    if (window_maps[i]->key_maps[j].mod_from == mod_from
+        && window_maps[i]->key_maps[j].key_from == key_from) {
+      return 1;
+    }
+  }
+  return 0;
+}
 
-  // Tentative:
-  // A key is logically down iff
-  //
-  // - it is physically down and not remapped to anything
-  //
-  // OR
-  //
-  // - at least on key remapped to it (in a single map) is physically
-  // - down
+// Tentative:
+// A key k is logically down iff
+//
+// - its primary function is not remapped in a single map and is
+//   physically down
+//
+// OR
+//
+// - the primary function of a key foo is remapped in a single map to
+//   k and foo is physically down
+//
+// This function returns 1 is k is logically down, 0 otherwise.
+int logical_state_of_key(unsigned int k) {
+  int i = currently_focused_window;
+  int its_primary_fun_is_remapped = primary_function_of_key_is_remapped(k);
+  // If it's primary function is not remapped in a single key
+  if (!its_primary_fun_is_remapped) {
+    // if it's physically down
+    if (physical_state_of(0)) {
+      return 1;
+    }
+  }
+
+  // If any key_map remaps the primary function of a foo to k and foo
+  // is physically down, then return 1
+  if (i == 0) {
+    // check each key_map in the default window map
+    for (int j = 0; j < window_maps[0]->size; j++) {
+      if (window_maps[0]->key_maps[j].key_from
+          && !window_maps[0]->key_maps[j].mod_from
+          && window_maps[0]->key_maps[j].key_to == k
+          && physical_state_of(window_maps[0]->key_maps[j].key_from)) {
+        return 1;
+      }
+    }
+
+    if (i != 0) {
+      // Check each key_map in the specific window map
+      for (int j = 0; j < window_maps[i]->size; j++) {
+        if (window_maps[i]->key_maps[j].key_from
+            && !window_maps[i]->key_maps[j].mod_from
+            && window_maps[i]->key_maps[j].key_to == k
+            && physical_state_of(window_maps[i]->key_maps[j].key_from)) {
+          return 1;
+        }
+      }
+      // Check those key_maps in the default map with are not in the
+      // specific map
+      for (int j = 0; j < window_maps[0]->size; j++) {
+        if (window_maps[0]->key_maps[j].key_from
+            && !window_maps[0]->key_maps[j].mod_from
+            && window_maps[0]->key_maps[j].key_to == k
+            && is_not_in_map(0, k, i)
+            && physical_state_of(window_maps[0]->key_maps[j].key_from)) {
+          return 1;
+        }
+      }
+    }
+  }
+
+  return 0;
 }
 
 struct libevdev_uinput *uidev;
