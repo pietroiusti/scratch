@@ -559,29 +559,35 @@ void handle_key(struct input_event ev) {
 
   //print_keyboard2();
 
-  printf("The currently focused window id is %d\n", currently_focused_window);
 
-  key_map* k_sm_i = is_key_in_single_map(ev.code);
-  key_map* m_sm_i = is_mod_in_single_map(ev.code);
-  key_map* k_cm_i = is_key_in_combo_map(ev.code);
-  key_map* m_cm_i = is_mod_in_combo_map(ev.code);
+  printf("primary fucnction: %d\n.", primary_function_of(ev.code));
 
-  if (k_sm_i != 0) {
-    printf("Is key in single key map.\n");
-  }
-  if (k_sm_i && k_sm_i->on_hold) {
-    printf("Is janus key.\n");
-  }
-  if (m_sm_i != 0) {
-    printf("Is mod in single key map.\n");
-  }
-  if (k_cm_i != 0) {
-    printf("Is key in combo key map.\n");
-    printf("%d\n", k_cm_i->key_to);
-  }
-  if (m_cm_i != 0) {
-    printf("Is mod in combo key map.\n");
-  }
+
+  /* printf("The currently focused window id is %d\n", currently_focused_window); */
+
+
+
+  /* key_map* k_sm_i = is_key_in_single_map(ev.code); */
+  /* key_map* m_sm_i = is_mod_in_single_map(ev.code); */
+  /* key_map* k_cm_i = is_key_in_combo_map(ev.code); */
+  /* key_map* m_cm_i = is_mod_in_combo_map(ev.code); */
+
+  /* if (k_sm_i != 0) { */
+  /*   printf("Is key in single key map.\n"); */
+  /* } */
+  /* if (k_sm_i && k_sm_i->on_hold) { */
+  /*   printf("Is janus key.\n"); */
+  /* } */
+  /* if (m_sm_i != 0) { */
+  /*   printf("Is mod in single key map.\n"); */
+  /* } */
+  /* if (k_cm_i != 0) { */
+  /*   printf("Is key in combo key map.\n"); */
+  /*   printf("%d\n", k_cm_i->key_to); */
+  /* } */
+  /* if (m_cm_i != 0) { */
+  /*   printf("Is mod in combo key map.\n"); */
+  /* } */
 
 
   key_map* uniquely_active_combo_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
@@ -610,74 +616,74 @@ void handle_key(struct input_event ev) {
 
   return;
 
-  if (k_cm_i) { // ## NON-MOD KEY PRESS PRESENT IN ONE OR MORE COMBO MAP
-    printf("We are in the k_cm_i block.\n");
+  /* if (k_cm_i) { // ## NON-MOD KEY PRESS PRESENT IN ONE OR MORE COMBO MAP */
+  /*   printf("We are in the k_cm_i block.\n"); */
 
-    // TODO: test is_key_in_uniquely_active_combo_map
-    if (is_key_in_uniquely_active_combo_map(ev.code)) {
-      printf("Handling key of one or more combo maps one of which is currently uniquely active.\n");
-      // If the mod_from of only one map is down/held (map is ``active''),
-      //
-      // Do what we do in 06 + change wrt primary function.
-      //
-      if (ev.value == 1) {
-        printf("<{([*])}>===> send mod_from (0).\n");
+  /*   // TODO: test is_key_in_uniquely_active_combo_map */
+  /*   if (is_key_in_uniquely_active_combo_map(ev.code)) { */
+  /*     printf("Handling key of one or more combo maps one of which is currently uniquely active.\n"); */
+  /*     // If the mod_from of only one map is down/held (map is ``active''), */
+  /*     // */
+  /*     // Do what we do in 06 + change wrt primary function. */
+  /*     // */
+  /*     if (ev.value == 1) { */
+  /*       printf("<{([*])}>===> send mod_from (0).\n"); */
 
-        printf("<{([*])}>===> send mod_to (1), if any.\n");
+  /*       printf("<{([*])}>===> send mod_to (1), if any.\n"); */
 
-        printf("<{([*])}>===> send key_to (1).\n");
-      } else if (ev.value == 2) {
+  /*       printf("<{([*])}>===> send key_to (1).\n"); */
+  /*     } else if (ev.value == 2) { */
 
-        printf("<{([*])}>===> send key_to (2).\n");
+  /*       printf("<{([*])}>===> send key_to (2).\n"); */
 
-      } else if (ev.value == 0) {
-        printf("<{([*])}>===> send key_to (0).\n");
+  /*     } else if (ev.value == 0) { */
+  /*       printf("<{([*])}>===> send key_to (0).\n"); */
 
-        printf("<{([*])}>===> send mod_to (0), if any.\n");
+  /*       printf("<{([*])}>===> send mod_to (0), if any.\n"); */
 
-        printf("<{([*])}>===> send mod_from (1).\n");
-      }
-    } else {
-      // Else
-      //
-      // Treat the key as a MOD/NON-MOD NO-MAP KEY PRESS
-      //
-      printf("Handling key of one or more combo maps none of which is currently active.\n");
-      printf("<{([*])}>===> SEND PRIMARY FUNCTION OF KEY RECEIVED WITH VALUE RECEIVED\n");
-    }
-  } else if (m_cm_i) { // ## MOD KEY PRESS PRESENT IN ONE OR MORE COMBO MAP
-    printf("We are in the m_cm_i block.\n");
+  /*       printf("<{([*])}>===> send mod_from (1).\n"); */
+  /*     } */
+  /*   } else { */
+  /*     // Else */
+  /*     // */
+  /*     // Treat the key as a MOD/NON-MOD NO-MAP KEY PRESS */
+  /*     // */
+  /*     printf("Handling key of one or more combo maps none of which is currently active.\n"); */
+  /*     printf("<{([*])}>===> SEND PRIMARY FUNCTION OF KEY RECEIVED WITH VALUE RECEIVED\n"); */
+  /*   } */
+  /* } else if (m_cm_i) { // ## MOD KEY PRESS PRESENT IN ONE OR MORE COMBO MAP */
+  /*   printf("We are in the m_cm_i block.\n"); */
 
-    // TODO: replace the 1
-    if (1) {
-      // If the key_from of only one map is down/held (map is
-      // ``active''),
-      //
-      // Do what we do in 06 + change wrt primary function
-      //
-      if (ev.value == 1) {
-        //send_key_ev_and_sync(uidev, map_of_key->mod_from, 0);
-        printf("<{([*])}>===> send mod_from (0)\n");
-        if (m_cm_i->mod_to) printf("<{([*])}>===> send mod_to (1)\n");
-        printf("<{([*])}>===> send key_to (1)\n");
-      } else if (ev.value == 2) {
-        printf("<{([*])}>===> send key_to (2)\n");
-      } else if (ev.value == 0) {
-        printf("<{([*])}>===> send key_to (0)\n");
-        if (m_cm_i->mod_to) printf("<{([*])}>===> send mod_to (0)\n");
-        printf("<{([*])}>===> send mod_from (1)\n");
-      }
-    } else {
-      // Else,
-      //
-      // Treat the key as a MOD/NON-MOD NO-MAP KEY PRESS
-      //
-      printf("Mod of one or more combo maps none of which is currently active.\n");
-      printf("<{([*])}>===> SEND PRIMARY FUNCTION OF MOD RECEIVED WITH VALUE RECEIVED\n");
-    }
-  } else { // ## MOD/NON-MOD NO-MAP KEY PRESS
+  /*   // TODO: replace the 1 */
+  /*   if (1) { */
+  /*     // If the key_from of only one map is down/held (map is */
+  /*     // ``active''), */
+  /*     // */
+  /*     // Do what we do in 06 + change wrt primary function */
+  /*     // */
+  /*     if (ev.value == 1) { */
+  /*       //send_key_ev_and_sync(uidev, map_of_key->mod_from, 0); */
+  /*       printf("<{([*])}>===> send mod_from (0)\n"); */
+  /*       if (m_cm_i->mod_to) printf("<{([*])}>===> send mod_to (1)\n"); */
+  /*       printf("<{([*])}>===> send key_to (1)\n"); */
+  /*     } else if (ev.value == 2) { */
+  /*       printf("<{([*])}>===> send key_to (2)\n"); */
+  /*     } else if (ev.value == 0) { */
+  /*       printf("<{([*])}>===> send key_to (0)\n"); */
+  /*       if (m_cm_i->mod_to) printf("<{([*])}>===> send mod_to (0)\n"); */
+  /*       printf("<{([*])}>===> send mod_from (1)\n"); */
+  /*     } */
+  /*   } else { */
+  /*     // Else, */
+  /*     // */
+  /*     // Treat the key as a MOD/NON-MOD NO-MAP KEY PRESS */
+  /*     // */
+  /*     printf("Mod of one or more combo maps none of which is currently active.\n"); */
+  /*     printf("<{([*])}>===> SEND PRIMARY FUNCTION OF MOD RECEIVED WITH VALUE RECEIVED\n"); */
+  /*   } */
+  /* } else { // ## MOD/NON-MOD NO-MAP KEY PRESS */
 
-  }
+  /* } */
 }
 
 void set_currently_focused_window(char* name) {
