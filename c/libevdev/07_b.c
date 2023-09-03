@@ -119,9 +119,10 @@ window_map default_map = {
 
 window_map brave_map = {
   "Brave-browser",
-  3,
+  4,
   { // Just some random stuff for tests
     { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_LEFT,    0             },
+    { KEY_RIGHTCTRL, KEY_G,        0,             KEY_ESC,     0             },
     { 0,             KEY_ESC,      0,             KEY_F,       0             },
     { 0,             KEY_ENTER,    0,             KEY_F,       0             },
   }
@@ -188,6 +189,7 @@ keyboard_key_state2 keyboard2[] = {
   { KEY_A, 0 }, // 30
   { KEY_E, 0 }, // 18
   { KEY_W, 0 }, // 17
+  { KEY_G, 0 }, // 34
 };
 
 void print_keyboard2() {
