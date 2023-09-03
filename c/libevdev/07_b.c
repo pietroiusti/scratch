@@ -201,7 +201,7 @@ void print_keyboard2() {
   }
 }
 
-void set_keyboard_state2(struct input_event ev) {
+void set_keyboard_state(struct input_event ev) {
   for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
     if (keyboard2[i].code == ev.code) {
       keyboard2[i].value = ev.value;
@@ -520,7 +520,7 @@ void handle_key(struct input_event ev) {
   printf("\n\n((((( handling %d, %d )))))\n\n", ev.code, ev.value);
 
   // Update keyboard state
-  set_keyboard_state2(ev);
+  set_keyboard_state(ev);
 
   //print_keyboard2();
 
