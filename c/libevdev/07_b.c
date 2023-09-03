@@ -316,6 +316,9 @@ int logical_state_of_key(unsigned int k) {
   return 0;
 }
 
+// TODO: int logical_state_of_mod(unsigned int k) or write a single
+// function both both mods and non-mods
+
 struct libevdev_uinput *uidev;
 
 static key_map* is_key_in_single_map(int key) {
