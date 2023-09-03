@@ -137,50 +137,6 @@ char* mapped_window_class_names[] = {
   "Brave-browser",
 };
 
-typedef struct {
-  unsigned int mod_from;
-  unsigned int key_from;
-  unsigned int mod_to;
-  unsigned int key_to;
-} map;
-
-map maps[] = {
-  //        from -----------> to
-  //         ^                ^
-  // ________|_________  _____|________
-  // |mod           key| | mod   key  |
-
-  // C-f, C-b, C-p, C-n
-  { KEY_RIGHTCTRL, KEY_F, 0, KEY_RIGHT }, { KEY_LEFTCTRL, KEY_F, 0, KEY_RIGHT },
-  { KEY_RIGHTCTRL, KEY_B, 0, KEY_LEFT }, { KEY_LEFTCTRL, KEY_B, 0, KEY_LEFT },
-  { KEY_RIGHTCTRL, KEY_P, 0, KEY_UP }, { KEY_LEFTCTRL, KEY_P, 0, KEY_UP },
-  { KEY_RIGHTCTRL, KEY_N, 0, KEY_DOWN }, { KEY_LEFTCTRL, KEY_N, 0, KEY_DOWN },
-
-  // C-a, C-e
-  { KEY_RIGHTCTRL, KEY_A, 0, KEY_HOME }, { KEY_LEFTCTRL, KEY_A, 0, KEY_HOME },
-  { KEY_RIGHTCTRL, KEY_E, 0, KEY_END }, { KEY_LEFTCTRL, KEY_E, 0, KEY_END },
-
-  // M-f, M-b
-  { KEY_RIGHTALT, KEY_F, KEY_RIGHTCTRL, KEY_RIGHT }, { KEY_LEFTALT, KEY_F, KEY_LEFTCTRL, KEY_RIGHT },
-  { KEY_RIGHTALT, KEY_B, KEY_RIGHTCTRL, KEY_LEFT }, { KEY_LEFTALT, KEY_B, KEY_LEFTCTRL, KEY_LEFT },
-
-  // M-v, C-v
-  { KEY_RIGHTALT, KEY_V, 0, KEY_PAGEUP }, { KEY_LEFTALT, KEY_V, 0, KEY_PAGEUP },
-  { KEY_RIGHTCTRL, KEY_V, 0, KEY_PAGEDOWN }, { KEY_LEFTCTRL, KEY_V, 0, KEY_PAGEDOWN },
-  // TODO:
-  // C-w
-  // M-w
-  // C-y
-  // C-d
-  // M-d
-  // C-k
-  // C-space
-  // C-s
-  // C-r
-  // C-g
-  // Escaping map [I usually bind it to C-q]
-};
-
 static void send_key_ev_and_sync(const struct libevdev_uinput *uidev, unsigned int code, int value)
 {
   int err;
@@ -197,12 +153,6 @@ static void send_key_ev_and_sync(const struct libevdev_uinput *uidev, unsigned i
   }
 
   printf("Sending %u %u\n", code, value);
-}
-
-// Take index of a map in maps and send mod_to + key_to of that map
-static void send_output(const struct libevdev_uinput *uidev, int i) {
-  if (maps[i].mod_to)
-    send_key_ev_and_sync(uidev, maps[i].mod_to, 1);
 }
 
 typedef struct {
