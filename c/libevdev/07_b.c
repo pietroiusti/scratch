@@ -269,6 +269,23 @@ int physical_state_of(unsigned int k_code) {
   return -1;
 }
 
+int logical_state_of(unsigned int k_code) {
+  // TODO
+
+  // For now:
+  return physical_state_of(k_code);
+
+  // Tentative:
+  // A key is logically down iff
+  //
+  // - it is physically down and not remapped to anything
+  //
+  // OR
+  //
+  // - at least on key remapped to it (in a single map) is physically
+  // - down
+}
+
 struct libevdev_uinput *uidev;
 
 static key_map* is_key_in_single_map(int key) {
