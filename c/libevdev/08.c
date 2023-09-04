@@ -68,7 +68,6 @@ typedef struct {
   unsigned int key_from;
   unsigned int mod_to;
   unsigned int key_to;
-  unsigned int on_hold;
 } key_map;
 
 typedef struct {
@@ -81,18 +80,18 @@ window_map default_map = {
   "Default",
   11,
   {
-    //mod_from       key_from      mod_to         key_to        on_hold
-    { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,      KEY_LEFTALT   },
-    { 0,             KEY_ENTER,    0,             0,            KEY_RIGHTCTRL },
-    { KEY_RIGHTCTRL, KEY_ESC,      0,             KEY_RIGHT,    0             },
-    { 0,             KEY_ESC,      0,             KEY_CAPSLOCK, 0             },
-    { 0,             KEY_W,        0,             KEY_1,        0             },
-    { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,    0             },
-    { KEY_RIGHTCTRL, 0,            KEY_RIGHTALT,  0,            0             },
-    { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,    0             },
-    { KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,            0             },
-    { 0,             KEY_A,        0,             KEY_RIGHTCTRL,0             },
-    { 0,             KEY_Q,        0,             KEY_F,        0             },
+    //mod_from       key_from      mod_to         key_to
+    { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,       },
+    { 0,             KEY_ENTER,    0,             0,             },
+    { KEY_RIGHTCTRL, KEY_ESC,      0,             KEY_RIGHT,     },
+    { 0,             KEY_ESC,      0,             KEY_CAPSLOCK,  },
+    { 0,             KEY_W,        0,             KEY_1,         },
+    { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,     },
+    { KEY_RIGHTCTRL, 0,            KEY_RIGHTALT,  0,             },
+    { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,     },
+    { KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,             },
+    { 0,             KEY_A,        0,             KEY_RIGHTCTRL, },
+    { 0,             KEY_Q,        0,             KEY_F,         },
   }
 };
 
@@ -100,11 +99,46 @@ window_map brave_map = {
   "Brave-browser",
   4,
   { // Just some random stuff for tests
-    { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_LEFT,    0             },
-    { KEY_RIGHTCTRL, KEY_G,        0,             KEY_ESC,     0             },
-    { 0,             KEY_ESC,      0,             KEY_F,       0             },
-    { 0,             KEY_ENTER,    0,             KEY_F,       0             },
+    { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_LEFT, },
+    { KEY_RIGHTCTRL, KEY_G,        0,             KEY_ESC,  },
+    { 0,             KEY_ESC,      0,             KEY_F,    },
+    { 0,             KEY_ENTER,    0,             KEY_F,    },
   }
+};
+
+// Represents the current state of the physical keyboard's keys. A key
+// can be in either 1, or 2, or 0 state (value).
+typedef struct {
+  unsigned int code; // Code of the key
+  int value;         // Status of key (either 1, or 2, or 0)
+  /* struct timespec last_time_down; // Last time value was set to 11 */
+} keyboard_key_state2;
+
+// Represents the current state of the physical keyboard's keys. A key
+// can be in either 1, or 2, or 0 state (value).
+//
+// IMPORTANT: each key used in the config must also appear in this
+// array.
+keyboard_key_state2 keyboard2[] = {
+  { KEY_LEFTCTRL, 0 }, // 29
+  { KEY_RIGHTCTRL, 0 }, // 97
+  { KEY_LEFTALT, 0 }, // 56
+  { KEY_RIGHTALT, 0 }, // 100
+  { KEY_CAPSLOCK, 0 }, // 58
+  { KEY_ENTER, 0 }, // 28
+  { KEY_RIGHT, 0 }, // 106
+  { KEY_SYSRQ, 0 }, // 99
+  { KEY_ESC, 0 }, // 1
+  { KEY_P, 0 }, // 25
+  { KEY_F, 0 }, // 33
+  { KEY_B, 0 }, // 48
+  { KEY_N, 0 }, // 49
+  { KEY_V, 0 }, // 47
+  { KEY_A, 0 }, // 30
+  { KEY_E, 0 }, // 18
+  { KEY_W, 0 }, // 17
+  { KEY_G, 0 }, // 34
+  { KEY_Q, 0 }, // 16
 };
 
 window_map* window_maps[] = {
@@ -231,8 +265,21 @@ void *track_window() {
   }
 }
 
+void set_keyboard_state(struct input_event ev) {
+  for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
+    if (keyboard2[i].code == ev.code) {
+      keyboard2[i].value = ev.value;
+      /* if (ev.value == 1) */
+      /*   clock_gettime(CLOCK_MONOTONIC, &keyboard2[i].last_time_down); */
+    }
+  }
+}
+
 void handle_key(struct input_event ev) {
   printf("%i (%i)\n", ev.code, ev.value);
+
+  // Update keyboard state
+  set_keyboard_state(ev);
 }
 
 int main(int argc, char **argv)
