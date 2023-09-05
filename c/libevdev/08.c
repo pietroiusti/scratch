@@ -149,7 +149,7 @@ window_map* window_maps[] = {
 // 0 is the index of the default window map (in the window_maps array)
 // which represents the set of those key_maps which are valid in any
 // window, unless overruled by a specific window map.
-volatile int currently_focused_window = 0;
+volatile unsigned int currently_focused_window = 0;
 
 struct libevdev_uinput *uidev;
 
