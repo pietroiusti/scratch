@@ -275,11 +275,75 @@ void set_keyboard_state(struct input_event ev) {
   }
 }
 
+/**
+   This function returns an array of pointers to those key_maps in
+   which `code` is the key_from.
+
+   The second argument is a pointer to an unsigned whose value will be
+   set to the number of results.
+
+   If the third argument is 0, only the default window map is
+   inspected. Otherwise we inspect both the default window map and the
+   non-default window map with that index.
+ */
+key_map** find_key_maps(unsigned int code,
+                        unsigned int* result_size,
+                        unsigned int non_default_w_map_index)
+{
+  unsigned int j;
+  unsigned int matches = 0;
+  key_map** results = NULL;
+
+  unsigned int indices[] = {0, non_default_w_map_index};
+  unsigned int length = non_default_w_map_index ? 2 : 1;
+
+  for (int i = 0; i < length; i++) {
+    if (indices[i] < sizeof(window_maps) / sizeof(window_maps[0])) {
+      for (j = 0; j < window_maps[indices[i]]->size; j++) {
+        if (window_maps[indices[i]]->key_maps[j].key_from == code) {
+          results = (key_map**)realloc(results, (matches + 1) * sizeof(key_map*));
+          if (!results) {
+            perror("Failed to reallocate memory");
+            exit(1);
+          }
+          results[matches] = &(window_maps[indices[i]]->key_maps[j]);
+          matches++;
+        }
+      }
+    }
+  }
+
+  *result_size = matches;
+  return results;
+}
+
+static key_map *is_key_in_uniquely_active_combo_map(unsigned int code) {
+  unsigned i = currently_focused_window;
+
+  unsigned num_of_results = 0;
+  key_map** results = find_key_maps(code, &num_of_results, i);
+  printf("found %d key_maps.\n", num_of_results);
+
+  for (size_t i = 0; i < num_of_results; i++) {
+    printf("KEY MAP: mod_from %d, key_from %d, mod_to %d, key_to %d\n",
+           results[i]->mod_from,
+           results[i]->key_from,
+           results[i]->mod_to,
+           results[i]->key_to);
+  }
+
+  return 0;
+}
+
 void handle_key(struct input_event ev) {
   printf("%i (%i)\n", ev.code, ev.value);
 
   // Update keyboard state
   set_keyboard_state(ev);
+
+
+  key_map* uniquely_active_combo_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
+
 }
 
 int main(int argc, char **argv)
@@ -310,7 +374,7 @@ int main(int argc, char **argv)
   if (rc < 0) {
     fprintf(stderr, "Failed to init libevdev (%s)\n", strerror(-rc));
     goto out;
-  }  
+  }
 
   int err;
   int uifd;
