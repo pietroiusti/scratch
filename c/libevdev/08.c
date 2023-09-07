@@ -83,6 +83,8 @@ typedef struct {
   key_map key_maps[];
 } window_map;
 
+key_map **selected_key_maps;
+
 window_map default_map = {
   "Default",
   11,
@@ -115,7 +117,7 @@ window_map brave_map = {
 
 window_map foo_map = {
   "this-is-just-for-testing",
-  4,
+  6,
   { // Just some random stuff for tests
     { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_LEFT, },
     { KEY_RIGHTCTRL, KEY_G,        0,             KEY_ESC,  },
@@ -360,11 +362,33 @@ void handle_key(struct input_event ev) {
 
 }
 
+unsigned int compute_size_of_selected_key_maps() {
+  unsigned int number_of_all_window_maps = sizeof(window_maps) / sizeof(window_maps[0]);
+
+  if (number_of_all_window_maps == 1) // there is only the default window map
+    return window_maps[0]->size;
+
+  unsigned int size_of_biggest_non_default_w_map = 0;
+
+  for (size_t i = 1; i < number_of_all_window_maps; i++) {
+    if (window_maps[i]->size > size_of_biggest_non_default_w_map) {
+      size_of_biggest_non_default_w_map = window_maps[i]->size;
+    }
+  }
+
+  return window_maps[0]->size + size_of_biggest_non_default_w_map;
+}
+
 int main(int argc, char **argv)
 {
   pthread_t xthread;
   int thread_return_value;
   thread_return_value = pthread_create(&xthread, NULL, track_window, NULL);
+
+
+  unsigned int size_of_selected_key_maps = compute_size_of_selected_key_maps();
+  printf("size_of_selected_key_maps: %d\n", size_of_selected_key_maps);
+
 
   struct libevdev *dev = NULL;
   const char *file;
