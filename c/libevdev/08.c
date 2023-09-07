@@ -63,6 +63,13 @@
 #include <X11/Xutil.h>
 #include <pthread.h>
 
+// 0 is the index of the default window map (in the window_maps array)
+// which represents the set of those key_maps which are valid in any
+// window, unless overruled by a specific window map.
+volatile unsigned int currently_focused_window = 0;
+
+struct libevdev_uinput *uidev;
+
 typedef struct {
   unsigned int mod_from;
   unsigned int key_from;
@@ -145,13 +152,6 @@ window_map* window_maps[] = {
   &default_map,
   &brave_map,
 };
-
-// 0 is the index of the default window map (in the window_maps array)
-// which represents the set of those key_maps which are valid in any
-// window, unless overruled by a specific window map.
-volatile unsigned int currently_focused_window = 0;
-
-struct libevdev_uinput *uidev;
 
 void set_currently_focused_window(char* name) {
   int currently_focused_window_next_value = 0;
