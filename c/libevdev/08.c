@@ -84,6 +84,8 @@ typedef struct {
 } window_map;
 
 key_map **selected_key_maps;
+unsigned int selected_key_maps_size;
+unsigned int key_maps_of_default_window_map_are_set = 0;
 
 window_map default_map = {
   "Default",
@@ -302,53 +304,74 @@ void set_keyboard_state(struct input_event ev) {
    inspected. Otherwise we inspect both the default window map and the
    non-default window map with that index.
  */
-key_map** find_key_maps(unsigned int code,
-                        unsigned int* result_size,
-                        unsigned int non_default_w_map_index)
-{
-  unsigned int j;
-  unsigned int matches = 0;
-  key_map** results = NULL;
+/* key_map** find_key_maps(unsigned int code, */
+/*                         unsigned int* result_size, */
+/*                         unsigned int non_default_w_map_index) */
+/* { */
+/*   unsigned int j; */
+/*   unsigned int matches = 0; */
+/*   key_map** results = NULL; */
 
-  unsigned int indices[] = {0, non_default_w_map_index};
-  unsigned int length = non_default_w_map_index ? 2 : 1;
+/*   unsigned int indices[] = {0, non_default_w_map_index}; */
+/*   unsigned int length = non_default_w_map_index ? 2 : 1; */
 
-  for (int i = 0; i < length; i++) {
-    if (indices[i] < sizeof(window_maps) / sizeof(window_maps[0])) {
-      for (j = 0; j < window_maps[indices[i]]->size; j++) {
-        if (window_maps[indices[i]]->key_maps[j].key_from == code) {
-          results = (key_map**)realloc(results, (matches + 1) * sizeof(key_map*));
-          if (!results) {
-            perror("Failed to reallocate memory");
-            exit(1);
-          }
-          results[matches] = &(window_maps[indices[i]]->key_maps[j]);
-          matches++;
-        }
+/*   for (int i = 0; i < length; i++) { */
+/*     if (indices[i] < sizeof(window_maps) / sizeof(window_maps[0])) { */
+/*       for (j = 0; j < window_maps[indices[i]]->size; j++) { */
+/*         if (window_maps[indices[i]]->key_maps[j].key_from == code) { */
+/*           results = (key_map**)realloc(results, (matches + 1) * sizeof(key_map*)); */
+/*           if (!results) { */
+/*             perror("Failed to reallocate memory"); */
+/*             exit(1); */
+/*           } */
+/*           results[matches] = &(window_maps[indices[i]]->key_maps[j]); */
+/*           matches++; */
+/*         } */
+/*       } */
+/*     } */
+/*   } */
+
+/*   *result_size = matches; */
+/*   return results; */
+/* } */
+
+/* static key_map *is_key_in_uniquely_active_combo_map(unsigned int code) { */
+/*   unsigned i = currently_focused_window; */
+
+/*   unsigned num_of_results = 0; */
+/*   key_map** results = find_key_maps(code, &num_of_results, i); */
+/*   printf("found %d key_maps.\n", num_of_results); */
+
+/*   for (size_t i = 0; i < num_of_results; i++) { */
+/*     printf("KEY MAP: mod_from %d, key_from %d, mod_to %d, key_to %d\n", */
+/*            results[i]->mod_from, */
+/*            results[i]->key_from, */
+/*            results[i]->mod_to, */
+/*            results[i]->key_to); */
+/*   } */
+
+/*   return 0; */
+/* } */
+
+static void set_selected_key_maps() {
+  unsigned int i = currently_focused_window;
+
+  if (i == 0) {
+    if (!key_maps_of_default_window_map_are_set) {
+      for (size_t j = 0; j < window_maps[0]->size; j++) {
+        selected_key_maps[j] = &window_maps[0]->key_maps[j];
       }
+      key_maps_of_default_window_map_are_set = 1;
+    }
+  } else {
+    for (size_t j = 0; j < window_maps[i]->size; j++) {
+      selected_key_maps[window_maps[0]->size+j] = &window_maps[i]->key_maps[j];
     }
   }
 
-  *result_size = matches;
-  return results;
-}
-
-static key_map *is_key_in_uniquely_active_combo_map(unsigned int code) {
-  unsigned i = currently_focused_window;
-
-  unsigned num_of_results = 0;
-  key_map** results = find_key_maps(code, &num_of_results, i);
-  printf("found %d key_maps.\n", num_of_results);
-
-  for (size_t i = 0; i < num_of_results; i++) {
-    printf("KEY MAP: mod_from %d, key_from %d, mod_to %d, key_to %d\n",
-           results[i]->mod_from,
-           results[i]->key_from,
-           results[i]->mod_to,
-           results[i]->key_to);
-  }
-
-  return 0;
+  selected_key_maps_size = i == 0 ?
+                                  window_maps[0]->size :
+                             window_maps[0]->size + window_maps[i]->size;
 }
 
 void handle_key(struct input_event ev) {
@@ -357,12 +380,22 @@ void handle_key(struct input_event ev) {
   // Update keyboard state
   set_keyboard_state(ev);
 
+  set_selected_key_maps();
+  // Should the setting of the key_maps be performed by the track_window fun?
 
-  key_map* uniquely_active_combo_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
+  printf("There are %d selected key_maps\n", selected_key_maps_size);
 
+  for (size_t i = 0; i < selected_key_maps_size; i++)
+    printf("KEY MAP: mod_from %d, key_from %d, mod_to %d, key_to %d\n",
+           selected_key_maps[i]->mod_from,
+           selected_key_maps[i]->key_from,
+           selected_key_maps[i]->mod_to,
+           selected_key_maps[i]->key_to);
+
+  //key_map* uniquely_active_combo_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
 }
 
-unsigned int compute_size_of_selected_key_maps() {
+unsigned int compute_max_size_of_selected_key_maps() {
   unsigned int number_of_all_window_maps = sizeof(window_maps) / sizeof(window_maps[0]);
 
   if (number_of_all_window_maps == 1) // there is only the default window map
@@ -381,15 +414,17 @@ unsigned int compute_size_of_selected_key_maps() {
 
 int main(int argc, char **argv)
 {
+  // Start tracking windows
   pthread_t xthread;
   int thread_return_value;
   thread_return_value = pthread_create(&xthread, NULL, track_window, NULL);
 
+  // Set relevant keymaps according to the selected window
+  unsigned int max_size_of_selected_key_maps = compute_max_size_of_selected_key_maps();
+  printf("size_of_selected_key_maps: %d\n", max_size_of_selected_key_maps);
+  selected_key_maps = malloc(max_size_of_selected_key_maps * sizeof(key_map*));
 
-  unsigned int size_of_selected_key_maps = compute_size_of_selected_key_maps();
-  printf("size_of_selected_key_maps: %d\n", size_of_selected_key_maps);
-
-
+  // Do libevdev stuff and call handle key at each key event
   struct libevdev *dev = NULL;
   const char *file;
   int fd;
