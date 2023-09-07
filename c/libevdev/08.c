@@ -113,6 +113,19 @@ window_map brave_map = {
   }
 };
 
+window_map foo_map = {
+  "this-is-just-for-testing",
+  4,
+  { // Just some random stuff for tests
+    { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_LEFT, },
+    { KEY_RIGHTCTRL, KEY_G,        0,             KEY_ESC,  },
+    { 0,             KEY_ESC,      0,             KEY_F,    },
+    { 0,             KEY_ENTER,    0,             KEY_F,    },
+    { 0,             KEY_A,        0,             KEY_RIGHTCTRL, },
+    { 0,             KEY_Q,        0,             KEY_F,         },
+  }
+};
+
 // Represents the current state of the physical keyboard's keys. A key
 // can be in either 1, or 2, or 0 state (value).
 typedef struct {
@@ -151,6 +164,7 @@ keyboard_key_state2 keyboard2[] = {
 window_map* window_maps[] = {
   &default_map,
   &brave_map,
+  &foo_map,
 };
 
 void set_currently_focused_window(char* name) {
