@@ -419,7 +419,8 @@ int main(int argc, char **argv)
   int thread_return_value;
   thread_return_value = pthread_create(&xthread, NULL, track_window, NULL);
 
-  // Set relevant keymaps according to the selected window
+  // Allocate space for holding active key_maps (those key_maps which
+  // are in place given the currently selected window)
   unsigned int max_size_of_selected_key_maps = compute_max_size_of_selected_key_maps();
   printf("size_of_selected_key_maps: %d\n", max_size_of_selected_key_maps);
   selected_key_maps = malloc(max_size_of_selected_key_maps * sizeof(key_map*));
