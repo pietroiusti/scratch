@@ -374,6 +374,38 @@ static void set_selected_key_maps() {
                            : window_maps[0]->size + window_maps[i]->size;
 }
 
+static key_map* is_key_in_uniquely_active_combo_map(int key) {
+  // (given comments in 07_b.c) logic:
+
+  // key is key_from in more than one key map in default window map where mod_from is != 0 and logically down --> return 0
+
+  // key is key_from in more than one key map in non-default window map where mod_from is != 0 and logically down --> return 0
+
+  // key is key_from in one key map in default window map where mod_from is != 0 and logically down        |
+  // and                                                                                                   |--> return 0
+  // key is key_from in anoter key map in non-default window map where mod_from is != 0 and logically down |
+
+  // key is key_from in one key map in default window map where mod_from != 0 and logically is down          |
+  // and                                                                                                     |--> return non-default key map if nokild*
+  // key is key_from in the same key map in non-default window map where mod_from is != 0 and logically down |
+
+  // key is key_from in one key map in default window map where mod_from is != 0 and logically down          |
+  // and                                                                                                     |--> return that default map if nokild*
+  // key is not key_from in one key map in non-default window map where mod_from is != 0 and logically down  |
+
+  // key is not key_from in one key map in default window map where mod_from is != 0 and logically down  |
+  // and                                                                                                 |--> return that non-default map if nokild*
+  // key is key_from in one key map in non-default window map where mod_from is != 0 and logically down  |
+
+  // *nokild: no other key is /logically/ down (besides key_from and mod_from)
+
+  return 0;
+}
+
+static key_map* is_mod_in_uniquely_active_combo_map(int key) {
+  return 0;
+}
+
 void handle_key(struct input_event ev) {
   printf("%i (%i)\n", ev.code, ev.value);
 
@@ -392,7 +424,27 @@ void handle_key(struct input_event ev) {
            selected_key_maps[i]->mod_to,
            selected_key_maps[i]->key_to);
 
-  //key_map* uniquely_active_combo_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
+  key_map* uniquely_active_combo_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
+  if (uniquely_active_combo_map_of_key) {
+    if (ev.value == 1)
+      ;
+    else if (ev.value == 2)
+      ;
+    else
+      ;
+  }
+
+  key_map* uniquely_active_combo_map_of_mod = is_mod_in_uniquely_active_combo_map(ev.code);
+  if (uniquely_active_combo_map_of_mod) {
+    if (ev.value == 1)
+      ;
+    else if (ev.value == 2)
+      ;
+    else
+      ;
+  }
+
+  // Else
 }
 
 unsigned int compute_max_size_of_selected_key_maps() {
