@@ -356,22 +356,22 @@ void set_keyboard_state(struct input_event ev) {
 static void set_selected_key_maps() {
   unsigned int i = currently_focused_window;
 
-  if (i == 0) {
-    if (!key_maps_of_default_window_map_are_set) {
+  if (!key_maps_of_default_window_map_are_set) { // we want to do this only
       for (size_t j = 0; j < window_maps[0]->size; j++) {
         selected_key_maps[j] = &window_maps[0]->key_maps[j];
       }
       key_maps_of_default_window_map_are_set = 1;
-    }
-  } else {
+  }
+
+  if (i != 0) {
     for (size_t j = 0; j < window_maps[i]->size; j++) {
       selected_key_maps[window_maps[0]->size+j] = &window_maps[i]->key_maps[j];
     }
   }
 
-  selected_key_maps_size = i == 0 ?
-                                  window_maps[0]->size :
-                             window_maps[0]->size + window_maps[i]->size;
+  selected_key_maps_size = i == 0
+                           ? window_maps[0]->size
+                           : window_maps[0]->size + window_maps[i]->size;
 }
 
 void handle_key(struct input_event ev) {
