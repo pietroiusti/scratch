@@ -295,6 +295,69 @@ void set_keyboard_state(struct input_event ev) {
   keyboard[ev.code] = ev.value;
 }
 
+int is_physically_down(int code) {
+  // 1 and 2 means down, 0 means up. so we can just return that value.
+  return keyboard[code];
+}
+
+int is_logically_down(int code) {
+  // A key is considered logically down, if there is a single key
+  // mapped to it which is physically down.
+
+  // I'm gonna assume, at least for now, that one can define a single
+  // map in four ways.
+
+  unsigned i = currently_focused_window;
+
+  for (int j = 0; j < window_maps[i]->size; j++) {
+    if (window_maps[i]->key_maps[j].key_to == code
+        && window_maps[i]->key_maps[j].key_from
+        && !window_maps[i]->key_maps[j].mod_from)
+      return 1;
+
+    if (window_maps[i]->key_maps[j].key_to == code
+        && !window_maps[i]->key_maps[j].key_from
+        && window_maps[i]->key_maps[j].mod_from)
+      return 1;
+
+    if (window_maps[i]->key_maps[j].mod_to == code
+        && !window_maps[i]->key_maps[j].key_from
+        && window_maps[i]->key_maps[j].mod_from)
+      return 1;
+
+    if (window_maps[i]->key_maps[j].mod_to == code
+        && window_maps[i]->key_maps[j].key_from
+        && !window_maps[i]->key_maps[j].mod_from)
+      return 1;
+  }
+
+  if (i != 0) { // look in the default map
+    for (int j = 0; j < window_maps[i]->size; j++) {
+      if (window_maps[0]->key_maps[j].key_to == code
+          && window_maps[0]->key_maps[j].key_from
+          && !window_maps[0]->key_maps[j].mod_from)
+        return 1;
+
+      if (window_maps[0]->key_maps[j].key_to == code
+          && !window_maps[0]->key_maps[j].key_from
+          && window_maps[0]->key_maps[j].mod_from)
+        return 1;
+
+      if (window_maps[0]->key_maps[j].mod_to == code
+          && !window_maps[0]->key_maps[j].key_from
+          && window_maps[0]->key_maps[j].mod_from)
+        return 1;
+
+      if (window_maps[0]->key_maps[j].mod_to == code
+          && window_maps[0]->key_maps[j].key_from
+          && !window_maps[0]->key_maps[j].mod_from)
+        return 1;
+    }
+  }
+
+  return 0;
+}
+
 void set_keyboard2_state(struct input_event ev) {
   for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
     if (keyboard2[i].code == ev.code) {
