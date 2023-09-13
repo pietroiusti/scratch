@@ -63,6 +63,14 @@
 #include <X11/Xutil.h>
 #include <pthread.h>
 
+// Keyboard key states lookup table.
+//
+// Index n holds the value (1, 2 or 0) of the key whose code is n in
+// /usr/include/linux/input-event-codes.h
+//
+// I'm including up to 248. Should be enough.
+int keyboard[249];
+
 // 0 is the index of the default window map (in the window_maps array)
 // which represents the set of those key_maps which are valid in any
 // window, unless overruled by a specific window map.
@@ -284,6 +292,10 @@ void *track_window() {
 }
 
 void set_keyboard_state(struct input_event ev) {
+  keyboard[ev.code] = ev.value;
+}
+
+void set_keyboard2_state(struct input_event ev) {
   for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
     if (keyboard2[i].code == ev.code) {
       keyboard2[i].value = ev.value;
@@ -417,8 +429,10 @@ static key_map* is_mod_in_uniquely_active_combo_map(int key) {
 void handle_key(struct input_event ev) {
   printf("%i (%i)\n", ev.code, ev.value);
 
-  // Update keyboard state
+  // Update keyboard2 state
   set_keyboard_state(ev);
+  // Update keyboard2 state
+  set_keyboard2_state(ev);
 
   set_selected_key_maps();
   // Should the setting of the key_maps be performed by the track_window fun?
@@ -474,6 +488,9 @@ unsigned int compute_max_size_of_selected_key_maps() {
 
 int main(int argc, char **argv)
 {
+  // Set initial keyboard state
+  memset(keyboard, 0, sizeof(keyboard));
+
   // Start tracking windows
   pthread_t xthread;
   int thread_return_value;
