@@ -101,7 +101,7 @@ window_map default_map = {
   {
     //mod_from       key_from      mod_to         key_to
     { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,       },
-    { 0,             KEY_ENTER,    0,             0,             },
+    { 0,             KEY_ENTER,    0,             KEY_ESC,       },
     { KEY_RIGHTCTRL, KEY_ESC,      0,             KEY_RIGHT,     },
     { 0,             KEY_ESC,      0,             KEY_CAPSLOCK,  },
     { 0,             KEY_W,        0,             KEY_1,         },
@@ -389,6 +389,27 @@ static void set_selected_key_maps() {
                            : window_maps[0]->size + window_maps[i]->size;
 }
 
+// Return primary function of code
+unsigned first_fun(unsigned code) {
+  for (int i = 0; i < selected_key_maps_size; i++) {
+    if ((selected_key_maps[i]->key_from == code
+         &&
+         !selected_key_maps[i]->mod_from)
+        ||
+        (selected_key_maps[i]->mod_from == code
+         &&
+         !selected_key_maps[i]->key_from))
+      {
+        unsigned k;
+        if ((k = selected_key_maps[i]->key_to)) return k;
+        else if ((k = selected_key_maps[i]->mod_to)) return k;
+        else printf("Error: first fun\n");
+      }
+  }
+
+  return code;
+};
+
 // Return (pointer to) uniquely active map where key is key_from, if
 // any; otherwise 0.
 static key_map* is_key_in_uniquely_active_combo_map(int key) {
@@ -431,6 +452,8 @@ static key_map* is_mod_in_uniquely_active_combo_map(int key) {
 
 void handle_key(struct input_event ev) {
   printf("%i (%i)\n", ev.code, ev.value);
+
+  printf("Primary fun: %d\n", first_fun(ev.code));
 
   // Update keyboard2 state
   set_keyboard_state(ev);
