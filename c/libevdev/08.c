@@ -300,64 +300,6 @@ int is_physically_down(int code) {
   return keyboard[code];
 }
 
-int is_logically_down(int code) {
-  // A key is considered logically down, if there is a single key
-  // mapped to it which is physically down.
-
-  // I'm gonna assume, at least for now, that one can define a single
-  // map in four ways.
-
-  unsigned i = currently_focused_window;
-
-  for (int j = 0; j < window_maps[i]->size; j++) {
-    if (window_maps[i]->key_maps[j].key_to == code
-        && window_maps[i]->key_maps[j].key_from
-        && !window_maps[i]->key_maps[j].mod_from)
-      return 1;
-
-    if (window_maps[i]->key_maps[j].key_to == code
-        && !window_maps[i]->key_maps[j].key_from
-        && window_maps[i]->key_maps[j].mod_from)
-      return 1;
-
-    if (window_maps[i]->key_maps[j].mod_to == code
-        && !window_maps[i]->key_maps[j].key_from
-        && window_maps[i]->key_maps[j].mod_from)
-      return 1;
-
-    if (window_maps[i]->key_maps[j].mod_to == code
-        && window_maps[i]->key_maps[j].key_from
-        && !window_maps[i]->key_maps[j].mod_from)
-      return 1;
-  }
-
-  if (i != 0) { // look in the default map
-    for (int j = 0; j < window_maps[i]->size; j++) {
-      if (window_maps[0]->key_maps[j].key_to == code
-          && window_maps[0]->key_maps[j].key_from
-          && !window_maps[0]->key_maps[j].mod_from)
-        return 1;
-
-      if (window_maps[0]->key_maps[j].key_to == code
-          && !window_maps[0]->key_maps[j].key_from
-          && window_maps[0]->key_maps[j].mod_from)
-        return 1;
-
-      if (window_maps[0]->key_maps[j].mod_to == code
-          && !window_maps[0]->key_maps[j].key_from
-          && window_maps[0]->key_maps[j].mod_from)
-        return 1;
-
-      if (window_maps[0]->key_maps[j].mod_to == code
-          && window_maps[0]->key_maps[j].key_from
-          && !window_maps[0]->key_maps[j].mod_from)
-        return 1;
-    }
-  }
-
-  return 0;
-}
-
 void set_keyboard2_state(struct input_event ev) {
   for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
     if (keyboard2[i].code == ev.code) {
@@ -409,6 +351,60 @@ unsigned first_fun(unsigned code) {
 
   return code;
 };
+
+unsigned is_logically_down(unsigned code) {
+  // A key is considered logically down, if there is a single key
+  // mapped to it which is physically down.
+
+  // I'm gonna assume, at least for now, that one can define a single
+  // map in four ways.
+
+  // It makes sense to bind a single key to another single key only in
+  // one key_map per window_map. Such a responsibility is on the user.
+  //
+  // Given so there can be max 2 relevant key_maps if currently_focused_window != 0
+  // and there can be max 1 relevant key_map if currently_focused_window == 0.
+  //
+  // If there are two key_maps, then the one in the non-default window
+  // map takes priority.
+  //
+  // So given the way selected_key_maps are arranged (default window
+  // map first) we can just loop over them and the last match, if any,
+  // is the right one.
+
+  key_map* found = 0;
+
+  for (size_t i = 0; i < selected_key_maps_size; i++) {
+    if (selected_key_maps[i]->key_to == code
+        && selected_key_maps[i]->key_from
+        && !selected_key_maps[i]->mod_from)
+      found = selected_key_maps[i];
+
+    if (selected_key_maps[i]->key_to == code
+        && !selected_key_maps[i]->key_from
+        && selected_key_maps[i]->mod_from)
+      found = selected_key_maps[i];
+
+    if (selected_key_maps[i]->mod_to == code
+        && !selected_key_maps[i]->key_from
+        && selected_key_maps[i]->mod_from)
+      found = selected_key_maps[i];
+
+    if (selected_key_maps[i]->mod_to == code
+        && selected_key_maps[i]->key_from
+        && !selected_key_maps[i]->mod_from)
+      found = selected_key_maps[i];
+  }
+
+  if (found) {
+    unsigned k = 0;
+    if ((k = found->key_from)) return is_physically_down(k);
+    else if ((k = found->mod_from)) return is_physically_down(k);
+    else {printf("Error: is_logically_down_second\n"); return 0;}
+  } else {
+    return is_physically_down(code);
+  }
+}
 
 // Return (pointer to) uniquely active map where key is key_from, if
 // any; otherwise 0.
