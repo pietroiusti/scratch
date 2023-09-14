@@ -408,23 +408,27 @@ unsigned is_logically_down(unsigned code) {
 
 // Return (pointer to) uniquely active map where key is key_from, if
 // any; otherwise 0.
-static key_map* is_key_in_uniquely_active_combo_map(int key) {
-  // (given comments in 07_b.c) logic:
+static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
+  // (given comments in 07_b.c and more thought) logic:
 
-  // key is key_from in more than one key map in default window map where mod_from is != 0 and logically down --> return 0
-
-
-  // key is key_from in more than one key map in non-default window map where mod_from is != 0 and logically down --> return 0
+  // 1st fun of key is key_from in more than one key map in default window map where mod_from is != 0 and logically down --> return 0
 
 
-  // key is key_from in one key map in default window map where mod_from is != 0 and logically down             |
-  // and                                                                                                        |--> return 0
-  // key is key_from in a different key map in non-default window map where mod_from is != 0 and logically down |
+  // 1st fun of key is key_from in more than one key map in non-default window map where mod_from is != 0 and logically down --> return 0
 
 
-  // key is key_from in one key map in default window map where mod_from != 0 and logically is down          |
-  // and                                                                                                     |--> return non-default key map if nokild*
-  // key is key_from in the same key map in non-default window map where mod_from is != 0 and logically down |
+  // 1st fun of key is key_from in one key map in default window map where mod_from is != 0 and logically down             |
+  // and                                                                                                                   |--> return 0
+  // 1st fun of key is key_from in a different key map in non-default window map where mod_from is != 0 and logically down |
+
+
+    // these first three rules boils down to :
+    // if 1st fun key is key_from in more than one key map where mod_from is !=0 and logically down --> return 0.
+
+
+  // 1st fun key is key_from in one key map in default window map where mod_from != 0 and logically is down          |
+  // and                                                                                                             |--> return non-default key map if nokild*
+  // 1st fun key is key_from in the same key map in non-default window map where mod_from is != 0 and logically down |
 
 
   // key is key_from in one key map in default window map where mod_from is != 0 and logically down          |
@@ -437,7 +441,10 @@ static key_map* is_key_in_uniquely_active_combo_map(int key) {
   // key is key_from in one key map in non-default window map where mod_from is != 0 and logically down  |
 
 
-  // *nokild: no other key is /logically/ down (besides key_from and mod_from)
+  // *nokild: no other key** is /logically/ down (besides key_from and mod_from)
+
+  // ** def(`no other key`) = ...?
+  // It's fine if there are only two keys down: `key` and a key which is logically mod_from.
 
   return 0;
 }
