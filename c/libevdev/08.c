@@ -295,7 +295,7 @@ void set_keyboard_state(struct input_event ev) {
   keyboard[ev.code] = ev.value;
 }
 
-int is_physically_down(int code) {
+unsigned is_physically_down(int code) {
   // 1 and 2 means down, 0 means up. so we can just return that value.
   return keyboard[code];
 }
