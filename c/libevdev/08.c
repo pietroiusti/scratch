@@ -97,7 +97,7 @@ unsigned int key_maps_of_default_window_map_are_set = 0;
 
 window_map default_map = {
   "Default",
-  11,
+  10,
   {
     //mod_from       key_from      mod_to         key_to
     { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,       },
@@ -108,7 +108,7 @@ window_map default_map = {
     { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,     },
     { KEY_RIGHTCTRL, 0,            KEY_RIGHTALT,  0,             },
     { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,     },
-    { KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,             },
+    //{ KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,             },
     { 0,             KEY_A,        0,             KEY_RIGHTCTRL, },
     { 0,             KEY_Q,        0,             KEY_F,         },
   }
