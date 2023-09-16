@@ -458,7 +458,7 @@ void handle_key(struct input_event ev) {
 
   printf("Primary fun: %d\n", first_fun(ev.code));
 
-  // Update keyboard2 state
+  // Update keyboard state
   set_keyboard_state(ev);
   // Update keyboard2 state
   set_keyboard2_state(ev);
