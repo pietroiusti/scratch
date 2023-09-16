@@ -406,25 +406,70 @@ unsigned is_logically_down(unsigned code) {
   }
 }
 
+unsigned is_key_from_in_more_than_one_selected_keymap_with_mod_from_logically_down(unsigned code) {
+  key_map* lastFound;
+  unsigned found = 0;
+
+  for (size_t i = 0; i < selected_key_maps_size; i++) {
+    if (selected_key_maps[i]->key_from == code
+        && selected_key_maps[i]->mod_from
+        && is_logically_down(selected_key_maps[i]->mod_from)) {
+      if (found != 0) {
+        if (lastFound->mod_from != selected_key_maps[i]->mod_from) {
+          found++;
+        }
+      } else {
+        found++;
+      }
+      lastFound = selected_key_maps[i];
+    }
+  }
+
+  if (found > 1)
+    return 1;
+  else
+    return 0;
+}
+
+unsigned nokild(unsigned mod_from, unsigned key_from) {
+
+  for (size_t i = 0; i < 249; i++) {
+    if (keyboard[i]) {
+      if (first_fun(i) != mod_from
+          && first_fun(i) != key_from) {
+        return 0;
+      }
+    }
+  }
+
+  // At the moment if there are more than one key down which bound to
+  // key_from, this function return true. We might want to change
+  // that, even though it doesn't seem necessary... when do you do
+  // that?!
+
+  return 1;
+}
+
 // Return (pointer to) uniquely active map where key is key_from, if
 // any; otherwise 0.
 static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
   // (given comments in 07_b.c and more thought) logic:
 
-  // 1st fun of key is key_from in more than one key map in default window map where mod_from is != 0 and logically down --> return 0
-
-
-  // 1st fun of key is key_from in more than one key map in non-default window map where mod_from is != 0 and logically down --> return 0
-
-
-  // 1st fun of key is key_from in one key map in default window map where mod_from is != 0 and logically down             |
-  // and                                                                                                                   |--> return 0
-  // 1st fun of key is key_from in a different key map in non-default window map where mod_from is != 0 and logically down |
-
-
+  // +-------------------------------------------------------------------------------------------------------------------------------------+
+  // |1st fun of key is key_from in more than one key map in default window map where mod_from is != 0 and logically down --> return 0     |
+  // |                                                                                                                                     |
+  // |                                                                                                                                     |
+  // |1st fun of key is key_from in more than one key map in non-default window map where mod_from is != 0 and logically down --> return 0 |
+  // |                                                                                                                                     |
+  // |                                                                                                                                     |
+  // |1st fun of key is key_from in one key map in default window map where mod_from is != 0 and logically down             |              |
+  // |and                                                                                                                   |--> return 0  |
+  // |1st fun of key is key_from in a different key map in non-default window map where mod_from is != 0 and logically down |              |
+  // +-------------------------------------------------------------------------------------------------------------------------------------+
     // these first three rules boils down to :
-    // if 1st fun key is key_from in more than one key map where mod_from is !=0 and logically down --> return 0.
-
+    // if 1st fun key is key_from in more than one key map where mod_from is != 0 and logically down --> return 0.
+    if (is_key_from_in_more_than_one_selected_keymap_with_mod_from_logically_down(code))
+      printf("is_key_from_in_more_than_one_selected_keymap_with_mod_from_logically_down");
 
   // 1st fun key is key_from in one key map in default window map where mod_from != 0 and logically is down          |
   // and                                                                                                             |--> return non-default key map if nokild*
@@ -449,6 +494,20 @@ static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
   return 0;
 }
 
+// Can't we simplify?
+static key_map* is_key_in_uniquely_active_combo_map_2(unsigned code) {
+  // if 1st fun of key is key_from in one key map (which can be both
+  // in the default window map and in the non-default window map) and
+  // nokild,
+  //
+  // then return that map (giving priority to key map in non-default
+  // window map, if any)
+  //
+  // otherwise, return 0;
+  return 0;
+}
+
+
 static key_map* is_mod_in_uniquely_active_combo_map(int key) {
   return 0;
 }
@@ -466,8 +525,33 @@ void handle_key(struct input_event ev) {
   set_selected_key_maps();
   // Should the setting of the key_maps be performed by the track_window fun?
 
-  printf("There are %d selected key_maps\n", selected_key_maps_size);
+  if (is_physically_down(KEY_RIGHTCTRL)) {
+    printf("KEY_RIGHTCTRL is physically down!\n");
+  } else {
+    printf("KEY_RIGHTCTRL is NOT physically down!\n");
+  }
+  if (is_logically_down(KEY_RIGHTCTRL)) {
+    printf("KEY_RIGHTCTRL is logically down!\n");
+  } else {
+    printf("KEY_RIGHTCTRL is NOT logically down!\n");
+  }
 
+  if (is_physically_down(KEY_RIGHTALT)) {
+    printf("KEY_RIGHTALT is physically down!\n");
+  } else {
+    printf("KEY_RIGHTALT is NOT physically down!\n");
+  }
+  if (is_logically_down(KEY_RIGHTALT)) {
+    printf("KEY_RIGHTALT is logically down!\n");
+  } else {
+    printf("KEY_RIGHTALT is NOT logically down!\n");
+  }
+  if (nokild(KEY_RIGHTALT, KEY_F)) {
+    printf("nokild(KEY_RIGHTALT, KEY_F)\n");
+  } else {
+    printf("NOT nokild(KEY_RIGHTALT, KEY_F)\n");
+  }
+  printf("There are %d selected key_maps\n", selected_key_maps_size);
   for (size_t i = 0; i < selected_key_maps_size; i++)
     printf("KEY MAP: mod_from %d, key_from %d, mod_to %d, key_to %d\n",
            selected_key_maps[i]->mod_from,
