@@ -431,6 +431,8 @@ unsigned is_key_from_in_more_than_one_selected_keymap_with_mod_from_logically_do
     return 0;
 }
 
+// nokild: no-other-key-is-logically-down (besides first fun of
+// mod_from and first fun of key_from)
 unsigned nokild(unsigned mod_from, unsigned key_from) {
 
   for (size_t i = 0; i < 249; i++) {
@@ -450,9 +452,10 @@ unsigned nokild(unsigned mod_from, unsigned key_from) {
   return 1;
 }
 
+// First sketch. here just for historical/development reasons.
 // Return (pointer to) uniquely active map where key is key_from, if
 // any; otherwise 0.
-static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
+static key_map* is_key_in_uniquely_active_combo_map_sketch(unsigned code) {
   // (given comments in 07_b.c and more thought) logic:
 
   // +-------------------------------------------------------------------------------------------------------------------------------------+
@@ -494,19 +497,49 @@ static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
   return 0;
 }
 
-// Can't we simplify?
-static key_map* is_key_in_uniquely_active_combo_map_2(unsigned code) {
-  // if 1st fun of key is key_from in one key map (which can be both
-  // in the default window map and in the non-default window map) and
-  // nokild,
+// Return (pointer to) ``uniquely active map'' where key is key_from,
+// if any; otherwise 0.
+static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
+  printf("foobar\n");
+  // if 1st fun of key is key_from in one key map where mod_from is
+  // !=0 and logically down (which can be both in the default window
+  // map and in the non-default window map) and nokild,
   //
   // then return that map (giving priority to key map in non-default
   // window map, if any)
   //
   // otherwise, return 0;
+
+
+  // let's loop backwards so we just take the first match if any
+  // (because the non-default window map, whose key maps have
+  // precedence, comes later, if present)
+  for(size_t i = selected_key_maps_size-1; i > 0; i--) {
+
+    if (selected_key_maps[i]->key_from == first_fun(code)) {
+
+      if (selected_key_maps[i]->mod_from) {
+
+        if (is_logically_down(selected_key_maps[i]->mod_from)) {
+
+          if (nokild(code, selected_key_maps[i]->mod_from)) {
+            return selected_key_maps[i];
+          } else {
+            return 0; // if we are here there can't be any other
+            // relevant combo map, so return 0. (we are only dealing with
+            // combo maps of two keys for now)
+          }
+
+        }
+
+      }
+
+    }
+
+  }
+
   return 0;
 }
-
 
 static key_map* is_mod_in_uniquely_active_combo_map(int key) {
   return 0;
@@ -561,6 +594,7 @@ void handle_key(struct input_event ev) {
 
   key_map* uniquely_active_combo_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
   if (uniquely_active_combo_map_of_key) {
+    printf("IS_KEY_IN_UNIQUELY_ACTIVE_COMBO_MAP\n");
     if (ev.value == 1)
       ;
     else if (ev.value == 2)
