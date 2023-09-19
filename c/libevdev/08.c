@@ -500,7 +500,6 @@ static key_map* is_key_in_uniquely_active_combo_map_sketch(unsigned code) {
 // Return (pointer to) ``uniquely active map'' where key is key_from,
 // if any; otherwise 0.
 static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
-  printf("foobar\n");
   // if 1st fun of key is key_from in one key map where mod_from is
   // !=0 and logically down (which can be both in the default window
   // map and in the non-default window map) and nokild,
