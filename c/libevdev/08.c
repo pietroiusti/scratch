@@ -540,7 +540,31 @@ static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
   return 0;
 }
 
-static key_map* is_mod_in_uniquely_active_combo_map(int key) {
+// analogously to is_key_in_uniquely_active_combo_map
+static key_map* is_mod_in_uniquely_active_combo_map(unsigned code) {
+
+  for (size_t i = selected_key_maps_size-1; i > 0; i--) {
+
+    if (selected_key_maps[i]->mod_from == first_fun(code)) {
+
+      if (selected_key_maps[i]->key_from) {
+
+        if (is_logically_down(selected_key_maps[i]->key_from)) {
+
+          if (nokild(code, selected_key_maps[i]->key_from)) {
+            return selected_key_maps[i];
+          } else {
+            return 0;
+          }
+
+        }
+
+      }
+
+    }
+
+  }
+
   return 0;
 }
 
@@ -604,6 +628,7 @@ void handle_key(struct input_event ev) {
 
   key_map* uniquely_active_combo_map_of_mod = is_mod_in_uniquely_active_combo_map(ev.code);
   if (uniquely_active_combo_map_of_mod) {
+    printf("IS_MOD_IN_UNIQUELY_ACTIVE_COMBO_MAP\n");
     if (ev.value == 1)
       ;
     else if (ev.value == 2)
