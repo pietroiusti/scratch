@@ -521,7 +521,7 @@ static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
 
         if (is_logically_down(selected_key_maps[i]->mod_from)) {
 
-          if (nokild(code, selected_key_maps[i]->mod_from)) {
+          if (nokild(selected_key_maps[i]->mod_from, code)) {
             return selected_key_maps[i];
           } else {
             return 0; // if we are here there can't be any other
