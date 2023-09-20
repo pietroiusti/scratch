@@ -97,7 +97,7 @@ unsigned int key_maps_of_default_window_map_are_set = 0;
 
 window_map default_map = {
   "Default",
-  10,
+  11,
   {
     //mod_from       key_from      mod_to         key_to
     { 0,             KEY_CAPSLOCK, 0,             KEY_ESC,       },
@@ -107,6 +107,7 @@ window_map default_map = {
     { 0,             KEY_W,        0,             KEY_1,         },
     { KEY_RIGHTALT,  KEY_F,        KEY_RIGHTCTRL, KEY_RIGHT,     },
     { KEY_RIGHTCTRL, 0,            KEY_RIGHTALT,  0,             },
+    { KEY_LEFTCTRL,  0,            KEY_RIGHTALT,  0,             },
     { KEY_RIGHTCTRL, KEY_F,        0,             KEY_RIGHT,     },
     //{ KEY_SYSRQ,     0,            KEY_RIGHTALT,  0,             },
     { 0,             KEY_A,        0,             KEY_RIGHTCTRL, },
@@ -352,7 +353,7 @@ unsigned first_fun(unsigned code) {
   return code;
 };
 
-unsigned is_logically_down(unsigned code) {
+unsigned is_logically_down_first(unsigned code) {
   // A key is considered logically down, if there is a single key
   // mapped to it which is physically down.
 
@@ -404,6 +405,94 @@ unsigned is_logically_down(unsigned code) {
   } else {
     return is_physically_down(code);
   }
+}
+
+unsigned is_logically_down_2(unsigned code) {
+  // I think: a code is logically down if there is at least one key
+  // whose first fun is code is physically down.
+
+
+  if (first_fun(code) == code) {
+    if (is_physically_down(code)) {
+      return code;
+    }
+  }
+
+  for (size_t i = 0; i < selected_key_maps_size; i++) {
+    if (selected_key_maps[i]->key_to == code
+        && selected_key_maps[i]->key_from
+        && !selected_key_maps[i]->mod_from
+        && is_physically_down(selected_key_maps[i]->key_from))
+      return selected_key_maps[i]->key_from;
+
+    if (selected_key_maps[i]->key_to == code
+        && !selected_key_maps[i]->key_from
+        && selected_key_maps[i]->mod_from
+        && is_physically_down(selected_key_maps[i]->mod_from))
+      return selected_key_maps[i]->mod_from;
+
+    if (selected_key_maps[i]->mod_to == code
+        && !selected_key_maps[i]->key_from
+        && selected_key_maps[i]->mod_from
+        && is_physically_down(selected_key_maps[i]->mod_from))
+      return selected_key_maps[i]->mod_from;
+
+    if (selected_key_maps[i]->mod_to == code
+        && selected_key_maps[i]->key_from
+        && !selected_key_maps[i]->mod_from
+        && selected_key_maps[i]->key_from)
+      return selected_key_maps[i]->key_from;
+  }
+
+  return 0;
+}
+
+unsigned is_in_array(unsigned *arr, unsigned size, unsigned code) {
+  for (size_t i = 0; i < size; i++)
+    if (arr[i] == code)
+      return 1;
+  return 0;
+}
+
+
+// 3rd sketch
+// looping backward seems the right thing to do
+// TODO: test with non-default window map
+unsigned is_logically_down(unsigned code) {
+
+  if (first_fun(code) == code) {
+    if (is_physically_down(code)) {
+      return code;
+    }
+  }
+
+  for (size_t i = selected_key_maps_size-1; i > 0; i--) {
+    if (selected_key_maps[i]->key_to == code
+        && selected_key_maps[i]->key_from
+        && !selected_key_maps[i]->mod_from
+        && is_physically_down(selected_key_maps[i]->key_from))
+      return selected_key_maps[i]->key_from;
+
+    if (selected_key_maps[i]->key_to == code
+        && !selected_key_maps[i]->key_from
+        && selected_key_maps[i]->mod_from
+        && is_physically_down(selected_key_maps[i]->mod_from))
+      return selected_key_maps[i]->mod_from;
+
+    if (selected_key_maps[i]->mod_to == code
+        && !selected_key_maps[i]->key_from
+        && selected_key_maps[i]->mod_from
+        && is_physically_down(selected_key_maps[i]->mod_from))
+      return selected_key_maps[i]->mod_from;
+
+    if (selected_key_maps[i]->mod_to == code
+        && selected_key_maps[i]->key_from
+        && !selected_key_maps[i]->mod_from
+        && selected_key_maps[i]->key_from)
+      return selected_key_maps[i]->key_from;
+  }
+
+  return 0;
 }
 
 unsigned is_key_from_in_more_than_one_selected_keymap_with_mod_from_logically_down(unsigned code) {
@@ -581,16 +670,20 @@ void handle_key(struct input_event ev) {
   set_selected_key_maps();
   // Should the setting of the key_maps be performed by the track_window fun?
 
-  if (is_physically_down(KEY_RIGHTCTRL)) {
-    printf("KEY_RIGHTCTRL is physically down!\n");
-  } else {
-    printf("KEY_RIGHTCTRL is NOT physically down!\n");
-  }
-  if (is_logically_down(KEY_RIGHTCTRL)) {
-    printf("KEY_RIGHTCTRL is logically down!\n");
-  } else {
-    printf("KEY_RIGHTCTRL is NOT logically down!\n");
-  }
+
+
+
+
+  /* if (is_physically_down(KEY_RIGHTCTRL)) { */
+  /*   printf("KEY_RIGHTCTRL is physically down!\n"); */
+  /* } else { */
+  /*   printf("KEY_RIGHTCTRL is NOT physically down!\n"); */
+  /* } */
+  /* if (is_logically_down(KEY_RIGHTCTRL)) { */
+  /*   printf("KEY_RIGHTCTRL is logically down!\n"); */
+  /* } else { */
+  /*   printf("KEY_RIGHTCTRL is NOT logically down!\n"); */
+  /* } */
 
   if (is_physically_down(KEY_RIGHTALT)) {
     printf("KEY_RIGHTALT is physically down!\n");
@@ -607,13 +700,16 @@ void handle_key(struct input_event ev) {
   } else {
     printf("NOT nokild(KEY_RIGHTALT, KEY_F)\n");
   }
-  printf("There are %d selected key_maps\n", selected_key_maps_size);
-  for (size_t i = 0; i < selected_key_maps_size; i++)
-    printf("KEY MAP: mod_from %d, key_from %d, mod_to %d, key_to %d\n",
-           selected_key_maps[i]->mod_from,
-           selected_key_maps[i]->key_from,
-           selected_key_maps[i]->mod_to,
-           selected_key_maps[i]->key_to);
+  /* printf("There are %d selected key_maps\n", selected_key_maps_size); */
+  /* for (size_t i = 0; i < selected_key_maps_size; i++) */
+  /*   printf("KEY MAP: mod_from %d, key_from %d, mod_to %d, key_to %d\n", */
+  /*          selected_key_maps[i]->mod_from, */
+  /*          selected_key_maps[i]->key_from, */
+  /*          selected_key_maps[i]->mod_to, */
+  /*          selected_key_maps[i]->key_to); */
+
+
+
 
   key_map* uniquely_active_combo_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
   if (uniquely_active_combo_map_of_key) {
