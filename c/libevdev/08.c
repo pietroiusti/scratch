@@ -333,8 +333,10 @@ static void set_selected_key_maps() {
 }
 
 // Return primary function of code
+//
+// loop backwards
 unsigned first_fun(unsigned code) {
-  for (int i = 0; i < selected_key_maps_size; i++) {
+  for (int i = selected_key_maps_size-1; i > 0; i--) {
     if ((selected_key_maps[i]->key_from == code
          &&
          !selected_key_maps[i]->mod_from)
