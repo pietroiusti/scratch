@@ -665,16 +665,20 @@ static key_map* is_mod_in_uniquely_active_combo_map(unsigned code) {
 void handle_key(struct input_event ev) {
   printf("%i (%i)\n", ev.code, ev.value);
 
-  printf("Primary fun: %d\n", first_fun(ev.code));
 
   // Update keyboard state
   set_keyboard_state(ev);
+
   // Update keyboard2 state
   set_keyboard2_state(ev);
 
   set_selected_key_maps();
   // Should the setting of the key_maps be performed by the track_window fun?
 
+
+
+
+  printf("Primary fun: %d\n", first_fun(ev.code));
 
 
 
