@@ -314,7 +314,7 @@ void set_keyboard2_state(struct input_event ev) {
 static void set_selected_key_maps() {
   unsigned int i = currently_focused_window;
 
-  if (!key_maps_of_default_window_map_are_set) { // we want to do this only
+  if (!key_maps_of_default_window_map_are_set) { // we want to do this only once
       for (size_t j = 0; j < window_maps[0]->size; j++) {
         selected_key_maps[j] = &window_maps[0]->key_maps[j];
       }
