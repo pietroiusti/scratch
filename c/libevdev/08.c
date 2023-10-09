@@ -343,10 +343,13 @@ unsigned first_fun(unsigned code) {
          &&
          !selected_key_maps[i]->key_from))
       {
-        unsigned k;
-        if ((k = selected_key_maps[i]->key_to)) return k;
-        else if ((k = selected_key_maps[i]->mod_to)) return k;
-        else printf("Error: first fun\n");
+        if (selected_key_maps[i]->key_to) {
+          return selected_key_maps[i]->key_to;
+        } else if (selected_key_maps[i]->mod_to) {
+          return selected_key_maps[i]->mod_to;
+        } else {
+          fprintf(stderr, "first_fun: Error. There is neither a key_to nor a mod_to\n");
+        }
       }
   }
 
