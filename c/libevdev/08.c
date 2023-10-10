@@ -495,7 +495,7 @@ unsigned is_logically_down(unsigned code) {
     if (selected_key_maps[i]->mod_to == code
         && selected_key_maps[i]->key_from
         && !selected_key_maps[i]->mod_from
-        && selected_key_maps[i]->key_from)
+        && is_physically_down(selected_key_maps[i]->key_from))
       return selected_key_maps[i]->key_from;
   }
 
