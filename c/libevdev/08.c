@@ -25,7 +25,7 @@
     - (l/r)alt-v -> pageup
 
     - (l/r)alt+f -> ctrl+right
-    - (l/r)alt-b -> ctrol+left .)
+    - (l/r)alt-b -> ctrl+left .)
 
   MOREOVER, this program allows for different mappings depending on
   which X windows is currently focused.
