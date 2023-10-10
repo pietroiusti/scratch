@@ -142,38 +142,39 @@ window_map foo_map = {
 
 // Represents the current state of the physical keyboard's keys. A key
 // can be in either 1, or 2, or 0 state (value).
-typedef struct {
-  unsigned int code; // Code of the key
-  int value;         // Status of key (either 1, or 2, or 0)
-  /* struct timespec last_time_down; // Last time value was set to 11 */
-} keyboard_key_state2;
+/* typedef struct { */
+/*   unsigned int code; // Code of the key */
+/*   int value;         // Status of key (either 1, or 2, or 0) */
+/*   /\* struct timespec last_time_down; // Last time value was set to 11 *\/ */
+/* } keyboard_key_state2; */
 
 // Represents the current state of the physical keyboard's keys. A key
 // can be in either 1, or 2, or 0 state (value).
 //
 // IMPORTANT: each key used in the config must also appear in this
 // array.
-keyboard_key_state2 keyboard2[] = {
-  { KEY_LEFTCTRL, 0 }, // 29
-  { KEY_RIGHTCTRL, 0 }, // 97
-  { KEY_LEFTALT, 0 }, // 56
-  { KEY_RIGHTALT, 0 }, // 100
-  { KEY_CAPSLOCK, 0 }, // 58
-  { KEY_ENTER, 0 }, // 28
-  { KEY_RIGHT, 0 }, // 106
-  { KEY_SYSRQ, 0 }, // 99
-  { KEY_ESC, 0 }, // 1
-  { KEY_P, 0 }, // 25
-  { KEY_F, 0 }, // 33
-  { KEY_B, 0 }, // 48
-  { KEY_N, 0 }, // 49
-  { KEY_V, 0 }, // 47
-  { KEY_A, 0 }, // 30
-  { KEY_E, 0 }, // 18
-  { KEY_W, 0 }, // 17
-  { KEY_G, 0 }, // 34
-  { KEY_Q, 0 }, // 16
-};
+/* keyboard_key_state2 keyboard2[] = { */
+/*   { KEY_LEFTCTRL, 0 }, // 29 */
+/*   { KEY_RIGHTCTRL, 0 }, // 97 */
+/*   { KEY_LEFTALT, 0 }, // 56 */
+/*   { KEY_RIGHTALT, 0 }, // 100 */
+/*   { KEY_CAPSLOCK, 0 }, // 58 */
+/*   { KEY_ENTER, 0 }, // 28 */
+/*   { KEY_RIGHT, 0 }, // 106 */
+/*   { KEY_SYSRQ, 0 }, // 99 */
+/*   { KEY_ESC, 0 }, // 1 */
+/*   { KEY_P, 0 }, // 25 */
+/*   { KEY_F, 0 }, // 33 */
+/*   { KEY_B, 0 }, // 48 */
+/*   { KEY_N, 0 }, // 49 */
+/*   { KEY_V, 0 }, // 47 */
+/*   { KEY_A, 0 }, // 30 */
+/*   { KEY_E, 0 }, // 18 */
+/*   { KEY_W, 0 }, // 17 */
+/*   { KEY_G, 0 }, // 34 */
+/*   { KEY_Q, 0 }, // 16 */
+/*   { KEY_L, 0}, // 38 */
+/* }; */
 
 window_map* window_maps[] = {
   &default_map,
@@ -302,15 +303,15 @@ unsigned is_physically_down(int code) {
   return keyboard[code];
 }
 
-void set_keyboard2_state(struct input_event ev) {
-  for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) {
-    if (keyboard2[i].code == ev.code) {
-      keyboard2[i].value = ev.value;
-      /* if (ev.value == 1) */
-      /*   clock_gettime(CLOCK_MONOTONIC, &keyboard2[i].last_time_down); */
-    }
-  }
-}
+/* void set_keyboard2_state(struct input_event ev) { */
+/*   for (int i = 0; i < sizeof(keyboard2)/sizeof(keyboard_key_state2); i++) { */
+/*     if (keyboard2[i].code == ev.code) { */
+/*       keyboard2[i].value = ev.value; */
+/*       /\* if (ev.value == 1) *\/ */
+/*       /\*   clock_gettime(CLOCK_MONOTONIC, &keyboard2[i].last_time_down); *\/ */
+/*     } */
+/*   } */
+/* } */
 
 static void set_selected_key_maps() {
   unsigned int i = currently_focused_window;
@@ -671,7 +672,7 @@ void handle_key(struct input_event ev) {
   set_keyboard_state(ev);
 
   // Update keyboard2 state
-  set_keyboard2_state(ev);
+  // set_keyboard2_state(ev);
 
   set_selected_key_maps();
   // Should the setting of the key_maps be performed by the track_window fun?
