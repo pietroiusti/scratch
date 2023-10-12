@@ -338,7 +338,7 @@ static void set_selected_key_maps() {
 //
 // loop backwards
 unsigned first_fun(unsigned code) {
-  for (int i = selected_key_maps_size-1; i > 0; i--) {
+  for (int i = selected_key_maps_size-1; i >= 0; i--) {
     if ((selected_key_maps[i]->key_from == code
          &&
          !selected_key_maps[i]->mod_from)
@@ -473,7 +473,7 @@ unsigned is_logically_down(unsigned code) {
     }
   }
 
-  for (size_t i = selected_key_maps_size-1; i > 0; i--) {
+  for (size_t i = selected_key_maps_size-1; i >= 0; i--) {
     if (selected_key_maps[i]->key_to == code
         && selected_key_maps[i]->key_from
         && !selected_key_maps[i]->mod_from
@@ -609,7 +609,7 @@ static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
   // let's loop backwards so we just take the first match if any
   // (because the non-default window map, whose key maps have
   // precedence, comes later, if present)
-  for(size_t i = selected_key_maps_size-1; i > 0; i--) {
+  for(size_t i = selected_key_maps_size-1; i >= 0; i--) {
 
     if (selected_key_maps[i]->key_from == first_fun(code)) {
 
@@ -639,7 +639,7 @@ static key_map* is_key_in_uniquely_active_combo_map(unsigned code) {
 // analogously to is_key_in_uniquely_active_combo_map
 static key_map* is_mod_in_uniquely_active_combo_map(unsigned code) {
 
-  for (size_t i = selected_key_maps_size-1; i > 0; i--) {
+  for (size_t i = selected_key_maps_size-1; i >= 0; i--) {
 
     if (selected_key_maps[i]->mod_from == first_fun(code)) {
 
