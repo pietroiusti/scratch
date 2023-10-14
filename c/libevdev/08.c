@@ -664,6 +664,24 @@ static key_map* is_mod_in_uniquely_active_combo_map(unsigned code) {
   return 0;
 }
 
+static void send_key_ev_and_sync(const struct libevdev_uinput *uidev, unsigned int code, int value)
+{
+  int err;
+
+  err = libevdev_uinput_write_event(uidev, EV_KEY, code, value);
+  if (err != 0) {
+    perror("Error in writing EV_KEY event\n");
+    exit(err);
+  }
+  err = libevdev_uinput_write_event(uidev, EV_SYN, SYN_REPORT, 0);
+  if (err != 0) {
+    perror("Error in writing EV_SYN, SYN_REPORT, 0.\n");
+    exit(err);
+  }
+
+  printf("Sending %u %u\n", code, value);
+}
+
 void handle_key(struct input_event ev) {
   printf("%i (%i)\n", ev.code, ev.value);
 
