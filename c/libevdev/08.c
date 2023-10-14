@@ -739,31 +739,77 @@ void handle_key(struct input_event ev) {
 
 
 
-
+  // ######
   key_map* uniquely_active_combo_map_of_key = is_key_in_uniquely_active_combo_map(ev.code);
   if (uniquely_active_combo_map_of_key) {
     printf("IS_KEY_IN_UNIQUELY_ACTIVE_COMBO_MAP\n");
-    if (ev.value == 1)
-      ;
-    else if (ev.value == 2)
-      ;
-    else
-      ;
+    if (ev.value == 1) {
+
+      if (is_logically_down(uniquely_active_combo_map_of_key->mod_from)) { // mod_from 1|2
+        if (uniquely_active_combo_map_of_key->mod_to) {
+          send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_key->mod_to, 1);
+        }
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_key->key_to, 1);
+      }
+
+    } else if (ev.value == 2) {
+
+      if (is_logically_down(uniquely_active_combo_map_of_key->mod_from)) { // mod_from 1|2
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_key->key_to, 1);
+      }
+
+    } else {
+
+      if (is_logically_down(uniquely_active_combo_map_of_key->mod_from)) { // mod_from 1|2
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_key->key_to, 0);
+        if (uniquely_active_combo_map_of_key->mod_to) {
+          send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_key->mod_to, 0);
+        }
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_key->mod_from, 0);
+      }
+
+    }
   }
 
+  // ######
   key_map* uniquely_active_combo_map_of_mod = is_mod_in_uniquely_active_combo_map(ev.code);
   if (uniquely_active_combo_map_of_mod) {
     printf("IS_MOD_IN_UNIQUELY_ACTIVE_COMBO_MAP\n");
-    if (ev.value == 1)
-      ;
-    else if (ev.value == 2)
-      ;
-    else
-      ;
+    if (ev.value == 1) {
+
+      if (is_logically_down(uniquely_active_combo_map_of_mod->key_from)) { // key_from 1|2
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_mod->mod_from, 0);
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_mod->key_from, 0);
+        if (uniquely_active_combo_map_of_mod->mod_to) {
+          send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_mod->mod_to, 0);
+        }
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_mod->key_to, 1);
+      }
+
+    } else if (ev.value == 2) {
+
+      printf("The alleged impossible is happening\n");
+
+    } else {
+
+      if (is_logically_down(uniquely_active_combo_map_of_mod->key_from)) { // key_from 1|2
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_mod->mod_from, 0);
+        if (uniquely_active_combo_map_of_mod->mod_to) {
+          send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_mod->mod_to, 0);
+        }
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_mod->key_to, 0);
+        send_key_ev_and_sync(uidev, uniquely_active_combo_map_of_mod->key_from, 1);
+      }
+
+    }
   }
 
-  // Else
+  // ######
+  // key/mod of non-uniquely-active map
+  send_key_ev_and_sync(uidev, first_fun(ev.code), ev.value);
 }
+
+
 
 unsigned int compute_max_size_of_selected_key_maps() {
   unsigned int number_of_all_window_maps = sizeof(window_maps) / sizeof(window_maps[0]);
