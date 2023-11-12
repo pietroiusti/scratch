@@ -20,3 +20,52 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+
+#include <linux/input-event-codes.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+  unsigned key_from;
+  unsigned key_to;
+} key_map;
+
+key_map default_key_maps[] = {
+  { KEY_CAPSLOCK, KEY_ESC },
+  { KEY_ESC, KEY_CAPSLOCK },
+};
+
+key_map brave_key_maps[] = {
+  { KEY_LEFT, KEY_HOME },
+  { KEY_UP, KEY_PAGEUP },
+  { KEY_RIGHT, KEY_END },
+  { KEY_DOWN, KEY_PAGEDOWN },
+};
+
+char* window_class_names[] = {
+  "Default",
+  "Brave-browser",
+};
+
+key_map* window_maps[] = {
+  default_key_maps,
+  brave_key_maps,
+};
+
+unsigned window_maps_sizes[] = {
+  2,
+  4,
+};
+
+int main(void) {
+  unsigned window_maps_count = sizeof(window_maps) / sizeof(window_maps[0]);
+
+  for (size_t i = 0; i < window_maps_count; i++) {
+    printf("The %s map has %u key maps.\n", window_class_names[i], window_maps_sizes[i]);
+  }
+
+  return 0;
+}
