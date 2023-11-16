@@ -33,7 +33,7 @@ typedef struct {
   unsigned key_to;
 } key_map;
 
-key_map default_key_maps[] = {
+key_map chromium_key_maps[] = {
   { KEY_CAPSLOCK, KEY_ESC },
   { KEY_ESC, KEY_CAPSLOCK },
 };
@@ -45,13 +45,15 @@ key_map brave_key_maps[] = {
   { KEY_DOWN, KEY_PAGEDOWN },
 };
 
+/* Class names of the x windows in which we are doing some
+   remappings */
 char* window_class_names[] = {
-  "Default",
+  "Chromium",
   "Brave-browser",
 };
 
 key_map* window_maps[] = {
-  default_key_maps,
+  chromium_key_maps,
   brave_key_maps,
 };
 
