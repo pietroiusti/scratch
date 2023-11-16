@@ -33,6 +33,12 @@ typedef struct {
   unsigned key_to;
 } key_map;
 
+typedef struct {
+  char* window_class_name;
+  key_map* key_maps;
+  unsigned key_maps_size;
+} window_map;
+
 key_map chromium_key_maps[] = {
   { KEY_CAPSLOCK, KEY_ESC },
   { KEY_ESC, KEY_CAPSLOCK },
@@ -52,14 +58,23 @@ char* window_class_names[] = {
   "Brave-browser",
 };
 
+/* The remappings to be used in the x windows specified in
+   window_class_names */
 key_map* window_maps[] = {
   chromium_key_maps,
   brave_key_maps,
 };
 
+/* The number of the remappings for each x windows specified in
+   window_class_names */
 unsigned window_maps_sizes[] = {
   2,
   4,
+};
+
+window_map w_maps[] = {
+  { "Chromium", chromium_key_maps, 2 },
+  { "Brave-browser", brave_key_maps, 2 },
 };
 
 int main(void) {
@@ -67,6 +82,8 @@ int main(void) {
 
   for (size_t i = 0; i < window_maps_count; i++) {
     printf("The %s map has %u key maps.\n", window_class_names[i], window_maps_sizes[i]);
+
+    printf("The %s map has %u key maps.\n", w_maps[i].window_class_name, w_maps[i].key_maps_size);
   }
 
   return 0;
