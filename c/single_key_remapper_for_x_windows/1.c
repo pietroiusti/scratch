@@ -51,39 +51,14 @@ key_map brave_key_maps[] = {
   { KEY_DOWN, KEY_PAGEDOWN },
 };
 
-/* Class names of the x windows in which we are doing some
-   remappings */
-char* window_class_names[] = {
-  "Chromium",
-  "Brave-browser",
-};
-
-/* The remappings to be used in the x windows specified in
-   window_class_names */
-key_map* window_maps[] = {
-  chromium_key_maps,
-  brave_key_maps,
-};
-
-/* The number of the remappings for each x windows specified in
-   window_class_names */
-unsigned window_maps_sizes[] = {
-  2,
-  4,
-};
-
-window_map w_maps[] = {
+window_map window_maps[] = {
   { "Chromium", chromium_key_maps, 2 },
   { "Brave-browser", brave_key_maps, 4 },
 };
 
 int main(void) {
-  unsigned window_maps_count = sizeof(window_maps) / sizeof(window_maps[0]);
-
-  for (size_t i = 0; i < window_maps_count; i++) {
-    printf("The %s map has %u key maps.\n", window_class_names[i], window_maps_sizes[i]);
-
-    printf("The %s map has %u key maps.\n", w_maps[i].window_class_name, w_maps[i].key_maps_size);
+  for (size_t i = 0; i < sizeof(window_maps)/sizeof(window_maps[0]); i++) {
+    printf("The %s map has %u key maps.\n", window_maps[i].window_class_name, window_maps[i].key_maps_size);
   }
 
   return 0;
