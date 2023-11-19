@@ -74,7 +74,7 @@ unsigned window_maps_sizes[] = {
 
 window_map w_maps[] = {
   { "Chromium", chromium_key_maps, 2 },
-  { "Brave-browser", brave_key_maps, 2 },
+  { "Brave-browser", brave_key_maps, 4 },
 };
 
 int main(void) {
