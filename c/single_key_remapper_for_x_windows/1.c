@@ -39,27 +39,30 @@ typedef struct {
   unsigned key_maps_size;
 } window_map;
 
-key_map chromium_key_maps[] = {
-  { KEY_CAPSLOCK, KEY_ESC },
-  { KEY_ESC, KEY_CAPSLOCK },
-};
-
-key_map brave_key_maps[] = {
-  { KEY_LEFT, KEY_HOME },
-  { KEY_UP, KEY_PAGEUP },
-  { KEY_RIGHT, KEY_END },
-  { KEY_DOWN, KEY_PAGEDOWN },
-};
-
 window_map window_maps[] = {
-  { "Chromium", chromium_key_maps, 2 },
-  { "Brave-browser", brave_key_maps, 4 },
+  { "Chromium",
+  (key_map[]){{ KEY_CAPSLOCK, KEY_ESC },
+              { KEY_ESC, KEY_CAPSLOCK }},
+  2
+  },
+  { "Brave-browser",
+  (key_map[]){{ KEY_LEFT, KEY_HOME },
+              { KEY_UP,KEY_PAGEUP },
+              { KEY_RIGHT, KEY_END },
+              { KEY_DOWN, KEY_PAGEDOWN }},
+  4 }
 };
 
 int main(void) {
   for (size_t i = 0; i < sizeof(window_maps)/sizeof(window_maps[0]); i++) {
-    printf("The %s map has %u key maps.\n", window_maps[i].window_class_name, window_maps[i].key_maps_size);
+    printf("The %s map has %u key maps:\n", window_maps[i].window_class_name, window_maps[i].key_maps_size);
+
+    for (size_t j = 0; j < window_maps[i].key_maps_size; j++) {
+      printf("%i --> %i\n", window_maps[i].key_maps[j].key_from, window_maps[i].key_maps[j].key_to);
+    }
   }
+
+  printf("Done. :)\n");
 
   return 0;
 }
