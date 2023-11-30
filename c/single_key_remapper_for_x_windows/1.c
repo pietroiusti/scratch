@@ -24,7 +24,7 @@
 
 /**
    Compile with:
-   gcc -pthread -g `pkg-config --libs x11` ./01.c
+   gcc -pthread -g `pkg-config --libs x11` ./1.c
 */
 
 #include <linux/input-event-codes.h>
@@ -83,12 +83,20 @@ void *track_window() {
   unsigned long bytes_left;
   unsigned char *data;
 
-  // Get name of the focused window window when focus changes
-  while (1) {
-    XNextEvent(display, &xevent);
+  char firstLoop = 1;
 
-    if (xevent.xproperty.atom != active_window_atom)
-      continue;
+  // Get name of the focused window window when focus changes
+  do {
+    if (!firstLoop) {
+      XNextEvent(display, &xevent);
+
+      if (xevent.xproperty.atom != active_window_atom)
+        continue;
+    }
+
+    if (firstLoop) {
+      firstLoop = 0;
+    }
 
     XGetWindowProperty(display,
                        root_window,
@@ -106,8 +114,9 @@ void *track_window() {
 
     Window focused_window = *(Window *)data;
 
-    if (focused_window == 0)
+    if (focused_window == 0) {
       continue;
+    }
 
     char* window_name1;
     if (XFetchName(display, focused_window, &window_name1) != 0) {
@@ -115,8 +124,9 @@ void *track_window() {
       XFree(window_name1);
     }
     XClassHint class_hint;
-    if (XGetClassHint(display, focused_window, &class_hint) == 0)
+    if (XGetClassHint(display, focused_window, &class_hint) == 0) {
       continue;
+    }
     char *window_class = class_hint.res_class;
     char *window_name2 = class_hint.res_name;
     printf("res.class = %s\n", window_class);
@@ -124,12 +134,10 @@ void *track_window() {
     printf("\n\n");
 
     //set_currently_focused_window(window_class);
-  }
+  } while (1);
 }
 
-int main(void) {
-  printf("Initializing...\n");
-
+void printConf(void) {
   for (size_t i = 0; i < sizeof(window_maps)/sizeof(window_maps[0]); i++) {
     printf("The %s map has %u key maps:\n", window_maps[i].window_class_name, window_maps[i].key_maps_size);
 
@@ -137,6 +145,12 @@ int main(void) {
       printf("%i --> %i\n", window_maps[i].key_maps[j].key_from, window_maps[i].key_maps[j].key_to);
     }
   }
+}
+
+int main(void) {
+  printf("Initializing...\n");
+
+  printConf();
 
   pthread_t track_window_thread;
   int track_window_thread_return_value;
