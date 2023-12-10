@@ -54,15 +54,33 @@ window_map window_maps[] = {
   { "Chromium",
   (key_map[]){{ KEY_CAPSLOCK, KEY_ESC },
               { KEY_ESC, KEY_CAPSLOCK }},
-  2
-  },
+  2 },
   { "Brave-browser",
   (key_map[]){{ KEY_LEFT, KEY_HOME },
               { KEY_UP,KEY_PAGEUP },
               { KEY_RIGHT, KEY_END },
               { KEY_DOWN, KEY_PAGEDOWN }},
-  4 }
+  4 },
 };
+
+// The value -1 is used to mean that the currently focused window has
+// no window_map associated with it, that is, it behaves in the
+// stadard way. Positive integers, instead, are indices of the
+// window_maps array's elements.
+volatile int currently_focused_window = -1;
+
+void set_currently_focused_window(char *win_name) {
+  int currently_focused_window_next_value = -1;
+  for (size_t i = 0; i < sizeof(window_maps)/sizeof(window_maps[0]); i++) {
+    char *n = window_maps[i].window_class_name;
+    if (strcmp(win_name, n) == 0) {
+      currently_focused_window_next_value = i;
+      break;
+    }
+  }
+  currently_focused_window = currently_focused_window_next_value;
+  printf("currently_focused_window set to %d\n", currently_focused_window);
+}
 
 void *track_window() {
   Display* display;
@@ -83,9 +101,10 @@ void *track_window() {
   unsigned long bytes_left;
   unsigned char *data;
 
-  char firstLoop = 1;
+  unsigned char firstLoop = 1;
 
-  // Get name of the focused window window when focus changes
+  // Get name of the focused window window when focus changes (and
+  // when program starts)
   do {
     if (!firstLoop) {
       XNextEvent(display, &xevent);
@@ -133,7 +152,8 @@ void *track_window() {
     printf("res.name = %s\n", window_name2);
     printf("\n\n");
 
-    //set_currently_focused_window(window_class);
+    set_currently_focused_window(window_class);
+
   } while (1);
 }
 
@@ -148,10 +168,11 @@ void printConf(void) {
 }
 
 int main(void) {
+  // Print stuff
   printf("Initializing...\n");
-
   printConf();
 
+  // Start tracking windows
   pthread_t track_window_thread;
   int track_window_thread_return_value;
   track_window_thread_return_value = pthread_create(&track_window_thread, NULL, track_window, NULL);
