@@ -24,7 +24,7 @@
 
 /**
    Compile with:
-   gcc -pthread -g `pkg-config --libs x11` ./1.c
+   gcc -pthread -g `pkg-config --cflags libevdev` `pkg-config --libs libevdev x11` ./1.c -o 1
 */
 
 #include <linux/input-event-codes.h>
@@ -38,6 +38,11 @@
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include "libevdev/libevdev.h"
+#include "libevdev/libevdev-uinput.h"
+#include <errno.h>
 
 typedef struct {
   unsigned key_from;
@@ -61,6 +66,8 @@ window_map window_maps[] = {
               { KEY_RIGHT, KEY_END },
               { KEY_DOWN, KEY_PAGEDOWN }},
   4 },
+  { "Emacs",
+  (key_map[]){{ KEY_LEFT, KEY_HOME },}}
 };
 
 // The value -1 is used to mean that the currently focused window has
@@ -167,19 +174,86 @@ void printConf(void) {
   }
 }
 
-int main(void) {
+static void handle_ev_key(const struct libevdev_uinput *uidev, unsigned int code, int value) {
+  printf("code: %d, value: %d\n", code, value);
+}
+
+int main(int argc, char **argv) {
   // Print stuff
   printf("Initializing...\n");
   printConf();
 
   // Start tracking windows
   pthread_t track_window_thread;
-  int track_window_thread_return_value;
-  track_window_thread_return_value = pthread_create(&track_window_thread, NULL, track_window, NULL);
+  int track_window_thread_return_value = pthread_create(&track_window_thread, NULL, track_window, NULL);
 
-  while(1) {
-    ;
-  }
+  struct libevdev *dev = NULL;
+    const char *file;
+    int fd;
+    int rc = 1;
+
+    if (argc < 2)
+        goto out;
+
+    usleep(100000); // let (KEY_ENTER), value 0 go through before
+
+    file = argv[1];
+    fd = open(file, O_RDONLY);
+    if (fd < 0) {
+        perror("Failed to open device\n");
+        goto out;
+    }
+
+    rc = libevdev_new_from_fd(fd, &dev);
+    if (rc < 0) {
+        fprintf(stderr, "Failed to init libevdev (%s)\n", strerror(-rc));
+        goto out;
+    }
+
+    int err;
+    int uifd;
+    struct libevdev_uinput *uidev;
+
+    uifd = open("/dev/uinput", O_RDWR);
+    if (uifd < 0) {
+        printf("uifd < 0 (Do you have the right privileges?)\n");
+        return -errno;
+    }
+
+    err = libevdev_uinput_create_from_device(dev, uifd, &uidev);
+    if (err != 0)
+        return err;
+        
+    int grab = libevdev_grab(dev, LIBEVDEV_GRAB);
+    if (grab < 0) {
+        printf("grab < 0\n");
+        return -errno;
+    }
+
+    do {
+        struct input_event ev;
+        rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL|LIBEVDEV_READ_FLAG_BLOCKING, &ev);
+        if (rc == LIBEVDEV_READ_STATUS_SYNC) {
+            printf("janus_key: dropped\n");
+            while (rc == LIBEVDEV_READ_STATUS_SYNC) {
+                rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_SYNC, &ev);
+            }
+            printf("janus_key: re-synced\n");
+        } else if (rc == LIBEVDEV_READ_STATUS_SUCCESS) {
+            if (ev.type == EV_KEY) {
+                handle_ev_key(uidev, ev.code, ev.value);
+            }
+        }
+    } while (rc == LIBEVDEV_READ_STATUS_SYNC || rc == LIBEVDEV_READ_STATUS_SUCCESS || rc == -EAGAIN);
+    
+    if (rc != LIBEVDEV_READ_STATUS_SUCCESS && rc != -EAGAIN)
+        fprintf(stderr, "Failed to handle events: %s\n", strerror(-rc));
+    
+    rc = 0;
+out:
+    libevdev_free(dev);
+    
+    return rc;
 
   return 0;
 }
