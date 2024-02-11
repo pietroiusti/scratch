@@ -67,12 +67,13 @@ window_map window_maps[] = {
               { KEY_DOWN, KEY_PAGEDOWN }},
   4 },
   { "Emacs",
-  (key_map[]){{ KEY_LEFT, KEY_HOME },}}
+  (key_map[]){{ KEY_LEFT, KEY_HOME }},
+  2 },
 };
 
 // The value -1 is used to mean that the currently focused window has
 // no window_map associated with it, that is, it behaves in the
-// stadard way. Positive integers, instead, are indices of the
+// standard way. Positive integers, instead, are indices of the
 // window_maps array's elements.
 volatile int currently_focused_window = -1;
 
@@ -174,8 +175,47 @@ void printConf(void) {
   }
 }
 
+
+
 static void handle_ev_key(const struct libevdev_uinput *uidev, unsigned int code, int value) {
-  printf("code: %d, value: %d\n", code, value);
+  //printf("code: %d, value: %d\n", code, value);
+  //printf("%d\n", currently_focused_window);
+
+  // TODO: change key code on the fly if key is mapped
+  if (currently_focused_window != -1) {
+    window_map wm = window_maps[currently_focused_window];
+    printf("%d\n", wm.key_maps_size);
+    size_t foundI = -1;
+    for (size_t i = 0; i < wm.key_maps_size; i++) {
+      key_map km = wm.key_maps[i];
+      if (km.key_from == code) {
+        foundI = i;
+        break;
+      }
+    }
+
+    if (foundI != -1) {
+      printf("\n\nMAPPED KEY!\n");
+      printf("key map key from: %u\n", window_maps[currently_focused_window].key_maps[foundI].key_from);
+      printf("code handled: %u\n", code);
+    } else {
+      printf("NORMAL KEY!\n");
+    }
+  }
+
+  // just send key through if key is not mapped (for now just send through all keys)
+  int err;
+  //printf("Sending %u %u\n", code, value);
+  err = libevdev_uinput_write_event(uidev, EV_KEY, code, value);
+  if (err != 0) {
+    perror("Error in writing EV_SYN, SYN_REPORT, 0.\n");
+    exit(err);
+  }
+  err = libevdev_uinput_write_event(uidev, EV_SYN, SYN_REPORT, 0);
+  if (err != 0) {
+    perror("Error in writing EV_SYN, SYN_REPORT, 0.\n");
+    exit(err);
+  }
 }
 
 int main(int argc, char **argv) {
@@ -223,7 +263,7 @@ int main(int argc, char **argv) {
     err = libevdev_uinput_create_from_device(dev, uifd, &uidev);
     if (err != 0)
         return err;
-        
+
     int grab = libevdev_grab(dev, LIBEVDEV_GRAB);
     if (grab < 0) {
         printf("grab < 0\n");
@@ -234,25 +274,23 @@ int main(int argc, char **argv) {
         struct input_event ev;
         rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL|LIBEVDEV_READ_FLAG_BLOCKING, &ev);
         if (rc == LIBEVDEV_READ_STATUS_SYNC) {
-            printf("janus_key: dropped\n");
             while (rc == LIBEVDEV_READ_STATUS_SYNC) {
                 rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_SYNC, &ev);
             }
-            printf("janus_key: re-synced\n");
         } else if (rc == LIBEVDEV_READ_STATUS_SUCCESS) {
             if (ev.type == EV_KEY) {
                 handle_ev_key(uidev, ev.code, ev.value);
             }
         }
     } while (rc == LIBEVDEV_READ_STATUS_SYNC || rc == LIBEVDEV_READ_STATUS_SUCCESS || rc == -EAGAIN);
-    
+
     if (rc != LIBEVDEV_READ_STATUS_SUCCESS && rc != -EAGAIN)
         fprintf(stderr, "Failed to handle events: %s\n", strerror(-rc));
-    
+
     rc = 0;
 out:
     libevdev_free(dev);
-    
+
     return rc;
 
   return 0;
