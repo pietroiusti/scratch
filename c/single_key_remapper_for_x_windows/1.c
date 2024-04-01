@@ -71,22 +71,30 @@ window_map window_maps[] = {
   2 },
 };
 
-// The value -1 is used to mean that the currently focused window has
-// no window_map associated with it, that is, it behaves in the
-// standard way. Positive integers, instead, are indices of the
-// window_maps array's elements.
+// Variable that store the index of currently active window map (the
+// map associated with the currently focused window).
+//
+// The value -1 means that the currently focused window has no
+// window_map associated with it, so all keys behave in the standard
+// way.
+//
+// This variable is shared by two threads. So, we use the `volatile`
+// keyword to tell the compiler that he has to write/read memory.
+//
+// Moreover, given that the variable holds an integer, we know that
+// read/write operations on it are atomic.
 volatile int currently_focused_window = -1;
 
 void set_currently_focused_window(char *win_name) {
-  int currently_focused_window_next_value = -1;
+  int new_currently_focused_window = -1;
   for (size_t i = 0; i < sizeof(window_maps)/sizeof(window_maps[0]); i++) {
-    char *n = window_maps[i].window_class_name;
-    if (strcmp(win_name, n) == 0) {
-      currently_focused_window_next_value = i;
+    char *name = window_maps[i].window_class_name;
+    if (strcmp(win_name, name) == 0) {
+      new_currently_focused_window = i;
       break;
     }
   }
-  currently_focused_window = currently_focused_window_next_value;
+  currently_focused_window = new_currently_focused_window;
   printf("currently_focused_window set to %d\n", currently_focused_window);
 }
 
