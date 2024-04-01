@@ -183,15 +183,19 @@ void printConf(void) {
   }
 }
 
-
-
 static void handle_ev_key(const struct libevdev_uinput *uidev, unsigned int code, int value) {
   //printf("code: %d, value: %d\n", code, value);
   //printf("%d\n", currently_focused_window);
 
   // TODO: change key code on the fly if key is mapped
-  if (currently_focused_window != -1) {
-    window_map wm = window_maps[currently_focused_window];
+
+  // We must make copy of currently_focused_window because we are
+  // reading its value multiple times and there is another thread that
+  // can change its value.
+  int currently_focused_window_copy = currently_focused_window;
+
+  if (currently_focused_window_copy != -1) {
+    window_map wm = window_maps[currently_focused_window_copy];
     printf("%d\n", wm.key_maps_size);
     size_t foundI = -1;
     for (size_t i = 0; i < wm.key_maps_size; i++) {
@@ -204,7 +208,7 @@ static void handle_ev_key(const struct libevdev_uinput *uidev, unsigned int code
 
     if (foundI != -1) {
       printf("\n\nMAPPED KEY!\n");
-      printf("key map key from: %u\n", window_maps[currently_focused_window].key_maps[foundI].key_from);
+      printf("key map key from: %u\n", window_maps[currently_focused_window_copy].key_maps[foundI].key_from);
       printf("code handled: %u\n", code);
     } else {
       printf("NORMAL KEY!\n");
