@@ -86,6 +86,11 @@ window_map window_maps[] = {
 volatile int currently_focused_window = -1;
 
 void set_currently_focused_window(char *win_name) {
+  // Create local variable instead to hold next value of
+  // currently_focused_window, instead of directly assigning the value
+  // twice. Write the global variable `currently_focused_window` only
+  // once. (We want to prevent the reader thread from reading the
+  // temporary -1)
   int new_currently_focused_window = -1;
   for (size_t i = 0; i < sizeof(window_maps)/sizeof(window_maps[0]); i++) {
     char *name = window_maps[i].window_class_name;
