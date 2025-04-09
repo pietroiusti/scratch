@@ -1,4 +1,4 @@
--HOSTINFO: displays the mapping of a domain name to its associated IP
- addresses. From CSAPP.
+- HOSTINFO: displays the mapping of a domain name to its associated IP
+  addresses. From CSAPP.
 
 - Compile with ~gcc csapp.c hostinfo.c -o hostinfo~.

@@ -1,0 +1,7 @@
+example from CSAPP.
+
+- compile client: gcc echo.c csapp.c echoclient.c -o client
+- compile server: gcc echo.c csapp.c echoserveri.c -o server
+- run server: ./server 8000
+- run client: ./client localhost 8000
+...
